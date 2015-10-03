@@ -18,45 +18,45 @@ species we found in western Oklahoma. For each species, we collected 8-10 pairs.
 Sample ID, date, area, latitude and longitude, etc are stored in 
 data/sample_data.csv
 #########
-Trait data
+## Trait data
 #########
-## Fuel moisture and LMA
+### Fuel moisture and LMA
 For each paired samples, we collected sub-sample for measuring field 
 moisture content. Greenhouse moisture will also be measured just before 
 burning trial on paired samples by taking sub-smaples. Leaf area will
 be scanned, records will contain both fresh mass, dry mass and leaf area.Data
 will be stored in data/Trait/Burned/FMC_LMA.csv and ./Destroyed/FMC_LMA.csv
 with one row per sample.
-######### 
+########## 
 For grass with needle leaves, leaf area will be measured by taking needle 
 diameter and length. These data will be stored in FMC-LAM-needle.csv with 
 one row per sample seperatly in Bunred and Destroyed file.
 ########
-## Architecture data
+### Architecture data
 ########
 For paired samples, plant height and width, tiller number and basal area will
 be taken and stored in ./Burned/Architecture.csv and ./Destroyed/
-Architecture_data.csv with one row per sample. 
-## Biomass density and Bulk density data
+Architecture.csv with one row per sample. 
+### Biomass density and Bulk density data
 ########
 For destroyed smaples, each indivdual will be cut into 5 equal parts along 
 height. Volume of entire plant will be measured. Oven dry weight of each part
 and corresponding height and volume will be stored in
 data/Trait/Destroyed/Biomass-Bulk-density-data.csv with one row per sample.
 ########
-## Surface area volume ratio data
+### Surface area volume ratio data
 ########
 NO idea now!
 ## Burning  data
 ########
 Burning  data contains two fiels:HOBO data and Flammability conponents data.
 ########
-## HOBO data
-######## 
+### HOBO data
+########## 
 Sample ID, trial number, date, time, temperature will be stored in 
 data/HOBO_raw_data/fiel.csv with one fiel for each day of burning.
 ########
-## Flammability data
+### Flammability data
 ########
 Sample ID, date, ignition time, combustion time, loss biomass, total biomass,
 maximum flame height will be stored in
