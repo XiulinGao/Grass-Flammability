@@ -9,7 +9,7 @@ Each data file referred to has an associate machine readable metadata file.
 IF the file is named file.csv,the metadata file is file-metadata.csv. The 
 metadata files describe each variable(column) in the data files.
 ##########
-# Sample data
+## Sample data
 ##########
 During 2015 summer, study was mainly conducted in eastern New Mexico in Kiowa
 National Grassland, we obatained 10 species there. There was another 
