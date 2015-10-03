@@ -47,8 +47,21 @@ data/Trait/Destroyed/Biomass-Bulk-density-data.csv with one row per sample.
 ## Surface area volume ratio data
 ########
 NO idea now!
-
-
-
- 
-
+## Burning  data
+########
+Burning  data contains two fiels:HOBO data and Flammability conponents data.
+########
+## HOBO data
+######## 
+Sample ID, trial number, date, time, temperature will be stored in 
+data/HOBO_raw_data/fiel.csv with one fiel for each day of burning.
+########
+## Flammability data
+########
+Sample ID, date, ignition time, combustion time, loss biomass, total biomass,
+maximum flame height will be stored in
+ data/Flammability_data/Flammability_components_data.csv with one row per sample.
+#######
+Biomass loss rate data will be stored in
+data/Flamambility_data/Biomass_loss_rate/file.csv with per fiel per trial. 
+Records mainly include sample ID, time, biomass.
