@@ -27,7 +27,7 @@ burning trial on paired samples by taking sub-smaples. Leaf area will
 be scanned, records will contain both fresh mass, dry mass and leaf area.Data
 will be stored in data/Trait/Burned/FMC_LMA.csv and ./Destroyed/FMC_LMA.csv
 with one row per sample.
-######## 
+######### 
 For grass with needle leaves, leaf area will be measured by taking needle 
 diameter and length. These data will be stored in FMC-LAM-needle.csv with 
 one row per sample seperatly in Bunred and Destroyed file.
