@@ -1,0 +1,11 @@
+variable,type ,unit,description
+Sample_ID,string,,initial of scientific name of each species before sample number
+Height_90%mass,numeric,cm,sample height measured at the boundary where 90% biomass concentrates 
+height_point,numeric,cm,sample height measured at the highest point of the plant
+Width_1,numeric,cm,"plant width measured at 5 points which are evenly located along plant height, first measurement"
+Width_2,numeric,cm,"plant width measured at 5 points which are evenly located along plant height, second measurement"
+Width_3,numeric,cm,"plant width measured at 5 points which are evenly located along plant height, third  measurement"
+Width_4,numeric,cm,"plant width measured at 5 points which are evenly located along plant height, fourth  measurement"
+Width_5,numeric,cm,"plant width measured at 5 points which are evenly located along plant height, fifth  measurement"
+tiller_number,numeric,,number of tillers of sample
+basal_area,numeric,cm2,basal area of each sample
