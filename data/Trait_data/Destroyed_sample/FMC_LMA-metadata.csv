@@ -1,0 +1,5 @@
+variable,type,unit,description
+Sample_ID,string,,initial of scientific name of each sample before sample number
+G_fresh_mass,numeric,g,fresh weight of subsample taken from plant sample after stored in greenhouse
+G_dry_mass,numeric,g,oven dry weight of subsample 
+G_leaf_area,numeric,cm^2,scanned leaf area of subsample

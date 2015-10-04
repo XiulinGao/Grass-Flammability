@@ -1,0 +1,17 @@
+variable,type,unit,description
+Sample_ID,string,,initial of scientific name of each species before sample number
+Height_1,numeric,cm,"sample is divided into 5 equal parts along height, height of first part"
+Dry_mass_1,numeric,g, oven dry mass of first part
+Volume_1,numeric,cm^3,volume of firs part
+Height_2,numeric,cm,height of second part
+Dry_mass_2,numeric,g,oven dry mass of second part
+Volume_2,numeric,cm^3,volume of second part
+Height_3,numeric,cm,height of third part
+Dry_mass_3,numeric,g,oven dry mass of third part
+Volume_3,numeric,cm^3,volume of third part
+Height_4,numeric,cm,height of fourth part
+Dry_mass_4,numeric,g,oven dry mass of fourth part
+Volume_4,numeric,cm^3,volume of fourth part
+Height_5,numeric,cm,height of fifth part
+Dry_mass_5,numeric,g,oven dry mass of fifth part
+Volume_5,numeric,cm^3,volume of fifth part
