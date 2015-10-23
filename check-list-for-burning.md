@@ -11,7 +11,7 @@
 - water container with water (for extinguishing fire) 
 - 100cm metal ruler and 30cm ruler
 - metal stander
-- enought clamps (different size)
+- enough clamps (different size)
 - cardboard
 - duck tape and gloves
 - paper bags
@@ -19,4 +19,6 @@
 - clipboard
 - pen and marker
 - record data sheet (enough)
+- ziploc 
+- small cooler with ice
 
