@@ -1,14 +1,14 @@
 ,measurement,burned,unburned
-1,fresh weight of subsample,P,P
-2,dry weight of subsample,P,P
-3,leaf area of leaf sample(cm^2),P,P
-4,dry mass of leaf sample(g),P,P
-5,tiller number,P,P
-6,basal area(cm^2),P,P
-7,height(cm),P,P
-8,width(cm),P,P
-9,fresh mass of every 5cm height(g),,P
-10,dry mass of every 5cm height(g),,P
+1,fresh weight of subsample,X,X
+2,dry weight of subsample,X,X
+3,leaf area of leaf sample(cm^2),X,X
+4,dry mass of leaf sample(g),X,X
+5,tiller number,X,X
+6,basal area(cm^2),X,X
+7,height(cm),X,X
+8,width(cm),X,X
+9,fresh mass of every 5cm height(g),,X
+10,dry mass of every 5cm height(g),,X
 11,fuel moisture content(%),"based on 1,2","based on 1,2"
 12,LMA(g/cm^2),"based on 3,4","based on 3,4"
 13,tiller density,"based on 5, 6","based on 5,6"
