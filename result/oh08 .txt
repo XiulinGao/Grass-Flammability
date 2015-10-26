@@ -1,0 +1,19 @@
+
+Call:
+lm(formula = mloss ~ seconds, data = mass)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-8617.7 -1308.5  -575.9  2891.8  5637.9 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  5.002e+06  5.058e+02 9887.78   <2e-16 ***
+seconds     -9.826e+01  4.692e+00  -20.94   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 3436 on 184 degrees of freedom
+Multiple R-squared:  0.7045,	Adjusted R-squared:  0.7029 
+F-statistic: 438.7 on 1 and 184 DF,  p-value: < 2.2e-16
+
