@@ -2,16 +2,17 @@
 1,fresh weight of subsample,X,X
 2,dry weight of subsample,X,X
 3,leaf area of leaf sample(cm^2),X,X
-4,dry mass of leaf sample(g),X,X
-5,tiller number,X,X
-6,basal area(cm^2),X,X
-7,height(cm),X,X
-8,width(cm),X,X
-9,fresh mass of every 5cm height(g),,X
-10,dry mass of every 5cm height(g),,X
-11,fuel moisture content(%),"based on 1,2","based on 1,2"
-12,LMA(g/cm^2),"based on 3,4","based on 3,4"
-13,tiller density,"based on 5, 6","based on 5,6"
-14,biomass density(g/cm),"based on 8,13 and 14 of unburned one",based on 9 or 10?
-15,bulk density(g/cm^3)," based on 7,8,13 and 15 of unburned one"," based on 7,8,10"
-16,SAV(cm^2/cm^3),"based on 7,8","based on 7,8"
+4,leaf thickness,X,X
+5,dry mass of leaf sample(g),X,X
+6,tiller number,X,X
+7,basal area(cm^2),X,X
+8,height(cm),X,X
+9,width(cm),X,X
+10,fresh mass of every 5cm height(g),,X
+11,dry mass of every 5cm height(g),,X
+12,fuel moisture content(%),"based on 1,2","based on 1,2"
+13,LMA(g/cm^2),"based on 3,4","based on 3,4"
+14,tiller density,"based on 5, 6","based on 5,6"
+15,biomass density(g/cm),"based on 8,13 and 14 of unburned one",based on 9 or 10?
+16,bulk density(g/cm^3)," based on 7,8,13 and 15 of unburned one"," based on 7,8,10"
+17,SAV(cm^2/cm^3),"based on 7,8","based on 7,8"
