@@ -1,0 +1,9 @@
+variable,type,unit,description
+SP.ID,string,,scientific name of experiment plant with sampling umber as suffix
+D11,numeric,mm,diameter 1 of leaf measured at sample point 1
+D12,numeric,mm,"diameter 2 of leaf measured at sample point 1, which is perpendicular to D11"
+D21,numeric,mm,diameter 1 of leaf measured at sample point 2
+D22,numeric,mm,"diameter 2 of leaf measured at sample point 2, which is perpendicular to D21"
+D31,numeric,mm,diameter 1 of leaf measured at sample point 3
+D32,numeric,mm,"diameter 2 of leaf measured at sample point 3, which is perpendicular to D31"
+length,numeric,cm,length of leaf that used for leaf traits measurement
