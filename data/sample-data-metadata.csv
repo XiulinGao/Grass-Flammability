@@ -1,0 +1,7 @@
+variable,type,unit,description
+Sample_ID,string,,initial of scientific name of each species with sample number as suffix
+area,string,,"sample area, can be KNG or BKNG, stands for kiowa and black kettle national grassland respectively"
+date,string,,date of sampling
+longitude,numeric,degree,"Longitude in decimal degrees, Spheroid WGS84"
+latitude,numeric,degree,"Latitude in decimal degrees, Spheroid WGS84"
+memo,string,,site description
