@@ -1,0 +1,5 @@
+variable,type,unit,description
+SP.ID,string,,scientific name of experiment plant with sampling number as suffix
+leaf_thickness1,numeric,mm,"leaf thickness taken at sample point 1, 3 replicates were taken"
+leaf_thickness2,numeric,mm,"leaf thickness taken at sample point 2, 3 replicates were taken"
+leaf_thickness3,numeric,mm,"leaf thickness taken at sample point 3, 3 replicates were taken"
