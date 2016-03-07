@@ -1,0 +1,19 @@
+variable,type,unit,description
+date,string,MM/DD/YYYY,date when burning trial is conducted
+trial.number,string,,"reference for the trial done on certain day, 1-10 stands for order, but 1-X stands for repeats of one trial on same species becase that species was less likely to burn"
+SP.ID,string,,intial of scientific name of each plant with smaple number as suffix
+temp,numeric,celsius,the ambient temperature taken at the beginning of each trial
+humidiy,numeric,%,the relative humidity of ambient environment taken at the beginning of each trial
+wind.v,numeric,km/h,wind velocity taken at beginning of each trial
+start.t,string,,start clock time of each trial
+initail.w,numeric,g,"weight of experiment plant read before actual burn starts,include weight of pot, soil, plant. Measured directly on burn table, may include error caused by air flow"
+ignition.d,string,mm:ss,"time to ignition, start at experiment plant exposed to ignition source and stopped at vision of solid frame"
+combustion.d,string,mm:ss,time duration that how long visible solid frame last
+glowing.d,string,mm:ss,time duration that glowing stage last
+max.fh,numeric,cm,maximum flame height of each burn
+end.w,numeric,g,"weight of experiment plant at the end of each burn, include pot, fuel residual and soil. Measured directly on burn table, may include error caused by air flow"
+c.drop,numeric,s,"time count until ignition source(cotton ball) is droped, started at time point when  biomass loss tracking program is launched by tester"
+before.w,numeric,g,"weight measured before each burn on another scale under stable condition, include pot, soil, plant and foil "
+after.w,numeric,g,"weight measured on another sacel under stable condition after removing above ground fuel residual , include pot, soil, underground biomass and foil"
+residual,numeric,g,weight of removed above ground fuel residual
+memo,string,,any note made during each burn will go here
