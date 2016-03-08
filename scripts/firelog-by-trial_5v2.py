@@ -5,7 +5,7 @@
 
 import string, sys, os, time
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from numpy import argmax
 from scipy.interpolate import interp1d
 
