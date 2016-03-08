@@ -1,0 +1,11 @@
+genus,specific.ephithet,family,spcode,Sp.ID,display.name,photosynthesis type,number of pairs,sampling area
+Aristida,purpurea,Poacea,ARPUL,AL,A.purpurea var. longiseta,C4,8,Kiowa National Grassland
+Eragrostis,curvula,Poacea,ERCU2,EGC,E.curvula,C4,10,Black Kettle National Grassland
+Andropogon,gerardii,Poacea,ANGE,AG,A.gerardii,C4,10,Kiowa National Grassland
+Muhlenbergia,torreyi,Poacea,MUTO2,MD,M.torreyi,C4,10,Kiowa National Grassland
+Panicum,coloratum,Poacea,PACO2,PC,P.coloratum,C4,10,Kiowa National Grassland
+Agropyron,smithii,Poacea,PASM,AS,A.smithii,C3,10,Kiowa National Grassland
+Elymus,canadensis,Poacea,ELCA4,EC,E.canadensis L.,C3,8,Kiowa National Grassland
+Stipa,neomexicana,Poacea,HENE5,SN,S.neomexicana,C3,10,Kiowa National Grassland
+Oryzopsis,hymenoides,Poacea,ORHY,OH,O.hymenoides,C3,8,Kiowa National Grassland
+Agrostis,hyemalis,Poacea,AGHY,AH,A.hyemalis,C3,10,Kiowa National Grassland
