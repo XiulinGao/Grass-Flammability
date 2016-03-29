@@ -45,6 +45,8 @@ basea <- concat_hobo_files(list.files("../data/hobo",
                                       full.names=TRUE, pattern = "*0a.csv"), "base.A")
 baseb <- concat_hobo_files(list.files("../data/hobo",
                                       full.names=TRUE, pattern = "*0b.csv"), "base.B")
+height10 <- concat_hobo_files(list.files("../data/hobo",
+                                         full.names=TRUE, pattern = "*10.csv"), "height.10")
 height20 <- concat_hobo_files(list.files("../data/hobo",
                                          full.names=TRUE, pattern = "*20.csv"), "height.20")
 height40 <- concat_hobo_files(list.files("../data/hobo",
@@ -53,7 +55,9 @@ height40 <- concat_hobo_files(list.files("../data/hobo",
 # Now merge all of these together to get one continuous time series (wide
 # data). Do we even need this? Really only necessary if we ever compare temps
 # across thermocouples.
-thermocouples.wide <- basea %>% full_join(baseb) %>% full_join(height20) %>% full_join(height40)
+thermocouples.wide <- basea %>% full_join(baseb) %>% full_join(height10) %>% 
+                      full_join(height20) %>% full_join(height40)
+                      
 
 ## get a trial ID from a time point
 get_trial_id <- function(time) {
@@ -79,3 +83,4 @@ temps.sum <- thermocouples.long %>% group_by(trial, location) %>%
               peak.time = time[which.max(temperature)],
               num.NA = sum(is.na(temperature))) %>%
     full_join(trials)
+
