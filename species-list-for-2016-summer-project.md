@@ -4,10 +4,10 @@
   
   Here is the tentative species list:  
   
-  * Shade-tolerant species:  Bromus anomalus; Elymus anomalus; Poa trivialis; Muhlenbergia racemosa; 
-Muhlenbergia asperifolia  
+  * Shade-tolerant species:  *Bromus anomalus*; *Elymus anomalus*; *Poa trivialis*; *Muhlenbergia racemosa*; 
+*Muhlenbergia asperifolia*  
 
-  * Shade-intolerant species: Aristida purpurea var. longiseta; Muhlenbergia cuspidata; Bouteloua gracilis; Elymus elymoides; Poa glauca  
+  * Shade-intolerant species: *Aristida purpurea var. longiseta*; *Muhlenbergia cuspidata*; *Bouteloua gracilis*; *Elymus elymoides*; *Poa glauca*  
 
   *Note*: At least, one trip to Kiowa before June should be done to explore if speciese on list can be easily collected there.  
   
