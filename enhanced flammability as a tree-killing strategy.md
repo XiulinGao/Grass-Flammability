@@ -1,30 +1,42 @@
-### Enhanced flammability as a tree-killing strategy by shade-intolerant grass species  
+# Enhanced flammability as a tree-killing strategy by shade-intolerant grass species #
 
-#### Are shade-intolerant species more flammable than shade-tolerant species?   
-* Yes.   
+## Are shade-intolerant species more flammable than shade-tolerant species? ##
 
-##### 1. What traits lead to this variation?   
+Yes.
 
-1.1 Canopy architecture: canopy architecture relates to biomass partitioning in vertical space, which influences first flammability axis, thus also relates to the influence of grass fire on their woody neighbors and their own reproductive organs.   
-Therefore, questions associated with this trait are:  
+## What traits lead to this variation? ##
+
+### Canopy architecture: ###
+
+Canopy architecture relates to biomass partitioning in vertical space, which influences first flammability axis, thus also relates to the influence of grass fire on their woody neighbors and their own reproductive organs. Therefore, questions associated with this trait are:
+
+1. how canopy architecture influences heat release at different heights?
+2. what's the **safe** architecture for grasses regarding the less negative impact the fire will have on grass reproductive organs(if they are not deep down in the soil), but more impacts on woody plants? 
+3. since grasses architecture will change significantly after they are senescent or at significantly different water content level (such as under severe water deficit), so at what moisture content when architecture is not important for fire propagation anymore (but I think fuel load will then play an important role, as well surface/volume ratio?)? 
+
+*Note*: As I see, some grasses can keep most of their dead biomass being held above the ground but some species keep most dead biomass being concentrated near the ground, which I think may influence flammability and heat that transferred into ground. But since I don't think there is significant difference in fuel moisture content when grasses are senescent, then I will think this post-senescence architecture difference may due to certain chemicals content difference, such as lignin. 
+
+1.3 Biomass allocation in vertical space: this trait is assessed as biomass density that measured in a novel way provided by Ripley et al.([2015](http://onlinelibrary.wiley.com/doi/10.1890/14-1495.1/full)). This measurement reflects how compact the fuel is in vertical space, thus may influence fire spread rate in vertical space and heat release at different heights. According to the 'pyrogenicity as protection' hypothesis proposed by Gagnon et al. ([2010](http://onlinelibrary.wiley.com/doi/10.1890/10-0291.1/abstract)), if plants retain fuel off ground and burn rapidly, enhanced flammability will protect under-ground organs and propagules.
+
+But, this measurement just assessed how fuel allocated along height, which is one dimension. However, it's surface to volume ratio that influence how aerated fuel is, thus fire spread rate. Thus, **is this enough to assess how fire residence time in vertical space?** Or I need to combine this with surface to volume ratio?
  
-1) how canopy architecture influences heat release at different heights?  
+1) Is there any relation between max. soil temperature and the height at which the plant reaches its maximum biomass density(assumed that **0** ~ **-10** cm soil temperature vary significantly among species)?
+ 
+2) What's the safe height where a large amount of biomass is concentrated?
 
-2) what's the **safe** architecture for grasses regarding the less negative impact the fire will have on grass reproductive organs(if they are not deep down in the soil), but more impacts on woody plants? 
-  
-3) since grasses architecture will change significantly after they are senescent or at significantly different water content level (such as under severe water deficit), so at what moisture content when architecture is not important for fire propagation anymore (but I think fuel load will then play an important role, as well surface/volume ratio?)? 
+### Chemical traits ###
 
-1.2 Chemical traits: some plant secondary compounds such as terpenes are very flammable. Recently, more studies started to investigate the influence of plant chemicals on woody species flammability ([Pausas et al., 2016](http://link.springer.com/article/10.1007/s00442-015-3454-8); [Elena Ormeño et al., 2009](http://www.sciencedirect.com/science/article/pii/S0378112708007020)). In common with other plants, grasses also produce a large array of secondary compounds, which often associated with the interaction between grass species and their biotic environment. Many of these secondary compounds are toxicants that influence forage quality or stress herbivore. Some of these compounds are important allelochemicals involved in stimulation or inhibition of growth of co-existing neighbors. As reviewed by Gibson ([2009](http://agris.fao.org/agris-search/search.do?recordID=US201300127449)), there are mainly four classes of secondary compounds in grasses considering their ecological impotence: nitrogen compounds, terpenoids, phenolics and others. For instance, a variety of monoterpenes are reported in emissions from grassland vegetation, for instance, α- and β-pinene, myrcene and limonene from *Poa* spp. dominated grassland in the Midwestern USA ([Fukui and Doskey, 2000](http://www.sciencedirect.com/science/article/pii/S1352231000000686?np=y.) ). However, some of those compounds are not widespread in grasses.  
+Some plant secondary compounds such as terpenes are very flammable. Recently, more studies started to investigate the influence of plant chemicals on woody species flammability ([Pausas et al., 2016](http://link.springer.com/article/10.1007/s00442-015-3454-8); [Elena Ormeño et al., 2009](http://www.sciencedirect.com/science/article/pii/S0378112708007020)). In common with other plants, grasses also produce a large array of secondary compounds, which often associated with the interaction between grass species and their biotic environment. Many of these secondary compounds are toxicants that influence forage quality or stress herbivore. Some of these compounds are important allelochemicals involved in stimulation or inhibition of growth of co-existing neighbors. As reviewed by Gibson ([2009](http://agris.fao.org/agris-search/search.do?recordID=US201300127449)), there are mainly four classes of secondary compounds in grasses considering their ecological impotence: nitrogen compounds, terpenoids, phenolics and others. For instance, a variety of monoterpenes are reported in emissions from grassland vegetation, for instance, α- and β-pinene, myrcene and limonene from *Poa* spp. dominated grassland in the Midwestern USA ([Fukui and Doskey, 2000](http://www.sciencedirect.com/science/article/pii/S1352231000000686?np=y.) ). However, some of those compounds are not widespread in grasses.
  
 *Note*: I think this aspect can be combined with invader grass species which may replace native species by inhibiting their growth, especially when this is associated with allelochemicals generated by invaders. 
  
-Except secondary compounds, chemicals like C:N, lignin, silicon, phosphate also can influence flammability.    
+Except secondary compounds, chemicals like C:N, lignin, silicon, phosphate also can influence flammability.
 
 So, questions are: 
-  
-1) Whether tested chemicals vary significantly in content among various grass species? Assume yes  
+
+1) Whether tested chemicals vary significantly in content among various grass species? Assume yes
  
-2) Do tested chemicals influence flammability of tested plants? Assume yes   
+2) Do tested chemicals influence flammability of tested plants? Assume yes
 
 3) Do chemicals inhibit neighbors growth? 
  
@@ -36,36 +48,26 @@ So, questions are:
     
 7) Is there any relation between chemicals(such as lignin, silicon) and plant architecture after plant is senescent? If so, will certain chemicals change significantly after plant senescence, thus alter architecture and flammability at different plant life stage? Also, will this change in architecture lead to flammability variation among various senescent grasses? 
 
-*Note*: As I see, some grasses can keep most of their dead biomass being held above the ground but some species keep most dead biomass being concentrated near the ground, which I think may influence flammability and heat that transferred into ground. But since I don't think there is significant difference in fuel moisture content when grasses are senescent, then I will think this post-senescence architecture difference may due to certain chemicals content difference, such as lignin. 
 
-1.3 Biomass allocation in vertical space: this trait is assessed as biomass density that measured in a novel way provided by Ripley et al.([2015](http://onlinelibrary.wiley.com/doi/10.1890/14-1495.1/full)). This measurement reflects how compact the fuel is in vertical space, thus may influence fire spread rate in vertical space and heat release at different heights. According to the 'pyrogenicity as protection' hypothesis proposed by Gagnon et al. ([2010](http://onlinelibrary.wiley.com/doi/10.1890/10-0291.1/abstract)), if plants retain fuel off ground and burn rapidly, enhanced flammability will protect under-ground organs and propagules.   
 
-But, this measurement just assessed how fuel allocated along height, which is one dimension. However, it's surface to volume ratio that influence how aerated fuel is, thus fire spread rate. Thus, **is this enough to assess how fire residence time in vertical space?** Or I need to combine this with surface to volume ratio?   
- 
-1) Is there any relation between max. soil temperature and the height at which the plant reaches its maximum biomass density(assumed that **0** ~ **-10** cm soil temperature vary significantly among species)?  
- 
-2) What's the safe height where a large amount of biomass is concentrated?  
+## 2. Can enhanced flammability kill woody species? ##
 
-##### 2. Can enhanced flammability kill woody species?  
+To determine if enhanced flammability possessed by some grass species is detrimental for co-existing woody species, which can be assessed by determining where the most heat will be.
 
-To determine if enhanced flammability possessed by some grass species is detrimental for co-existing woody species, which can be assessed by determining where the most heat will be.   
+2.1 Down into soil?
 
-2.1 Down into soil?  
 This situation is not beneficial for grasses at all, reproductive organ and propagules probably will be killed. 
 
-2.2 Upward into the upper space?   
+2.2 Upward into the upper space?
+
 In this situation, most heat will go to above-ground biomass, of either grasses or woody species, result in death or scorch of above-ground biomass. 
 
-Either way, questions needed to solve include:  
+Either way, questions needed to solve include:
 
-1) Temperature below ground at 0 ~ -10cm, as well as temperature at different heights in upper space. 
+1) Temperature below ground at 0 -- -10 cm, as well as temperature at different heights in upper space. 
 
 2) Is this temperature profile related to biomass allocation pattern in vertical space? 
 
 3) What's the influence of max. soil temperature on regrowth of grasses?
 
 4) How is mortality or scorch of woody species? any relation between the damage of woody species and flammability measurements (max. flame height, temp at different heights, max. heat release rate), as well as biomass allocation? 
-
-
-
-
