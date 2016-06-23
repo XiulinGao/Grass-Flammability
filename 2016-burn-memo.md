@@ -6,6 +6,7 @@
 
 ##2016-06-15
 * first trial for ec27 didn't propagate, so I tried another ignition on it and it succeeded, but I just took the measurements for the second one
+
 ##2016-06-22
 * during the burn of as07, it didn't propagate well
 * during the ignition of sn27, wind blowed the ignition source and it didn't touch the plant, thus leads to the relatively longer ignition duration for sn27
