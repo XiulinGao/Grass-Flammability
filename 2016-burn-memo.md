@@ -11,3 +11,8 @@
 * during the burn of as07, it didn't propagate well
 * during the ignition of sn27, wind blowed the ignition source and it didn't touch the plant, thus leads to the relatively longer ignition duration for sn27
 * forgot to lap the ignition duration for bi01, thus the combustion duration for bi01 actually includes both ignition and combustion durations.
+
+##2016-06-29
+* bi11: some biomass fell onto the ruler, lead to noise
+* erc27: smoldering duration last too long, longer than 50 mins, due to time limitation, stopped the recording before it completely stopped smoldering
+* as25, as29, bi09, as31, bi07, erc11, bi25, bi19 all showed wired balance reading: the reading jumped back to previous biomass reading and decreased at almost same rate, when it reached certain number, jumped back to previous reading again. When this happened, there was no strong air flow, so i wonder if this is the balance issue. 
