@@ -3,19 +3,18 @@
 ## plot biomass variation based on time in seconds 
 ## and do linear model for calculating biomass loss rate
 
-setwd("../result")
-library(plyr)
+library(dplyr)
 library(stringr)
 library(ggplot2)
 
 # read mutiple .csv files at once and rbind them as a file
 load_data <- function(path) { 
   files <- dir(path, pattern = '1023', full.names = TRUE)
-  tables <- lapply(files, read.csv)
-  do.call(rbind, tables)
+  tables <- lapply(files, read.csv, stringsAsFactors=FALSE)
+  return(bind_rows(tables))
 }
-path <- '../burn-data'
-data <- load_data(path)
+
+balance_data <- load_data("../data/balance/")
 
 # clean up data by attaching species id to each row and convert mass to 
 # integer
