@@ -4,44 +4,53 @@
 ## and do linear model for calculating biomass loss rate
 
 
-library(plyr)
-library(stringr)
+library(dplyr)
 library(ggplot2)
+library(stringr)
 
-# add colume names to raw csv file in order to rbind them next step
-get_colnames <- function(file) {
-  colnames(file) <- c('time', 'mass')
-  file
+# read and clean a single balance file produced by serial-balance.py. See
+# https://github.com/schwilklab/serial-balance
+read_balance_file <- function(filename) {
+  bdf <- read.csv(filename, sep="\t", stringsAsFactors=FALSE)
+  names(bdf) <- c("datet", "label", "nsec", "mass")
+  bdf <- bdf[-1,] # strip out first line which has the label prompt text in the
+  # first col
+
+  bname <- basename(filename)
+  
+  bdf$label <- str_sub(bname, 11 , -5)
+  bdf$trial <- str_sub(bname, 9, 10)
+    
+  return(bdf)
 }
+
+
 # read mutiple .csv files at once and rbind them as a file
-load_data <- function(path) { 
+concat_csv_dir <- function(path) { 
   files <- dir(path, pattern = '.csv', full.names = TRUE)
-  tables <- lapply(files, read.csv)
-  do.call(rbind, llply(tables, get_colnames))
+  tables <- lapply(files, read_balance_file)
+  return(bind_rows(tables))
 }
-path <- '../data/balance'
-data <- load_data(path)
 
-# clean up data by attaching species id to each row and convert mass to 
-# integer
-shapedata <- ddply(data, 'time', mutate, sp = str_sub(toString(mass), 5, 8))
-sbalance <- ddply(shapedata, 'time', mutate, 
-                  mloss = as.integer(str_sub(toString(mass), -18, -1)))
-sbalance <- sbalance[, -2]
+balance_data <- concat_csv_dir('../data/balance')
+balance_data <- balance_data %>% group_by(label) %>%
+  mutate(mloss= first(mass) - mass, mass2= mass-min(mass), utrial=paste(label, trial, sep="-"))
+
 
 # graph biomass loss based on time in seconds and do linear model for each
 # trial species
 
-ID <- unique(sbalance$sp)
-for (i in 1: length(unique(ID))) {
-  
-  mass <- sbalance[sbalance$sp==ID[i], ] # split data into subset in 
-                                         # one species
-  mass$seconds <- 1:length(unique(mass$time)) # attach seconds column
-  mod.mloss <- lm(mloss ~ seconds, data = mass) #linear model log(mass)?
-  lm.summary <- summary(mod.mloss) # lm summary info
-  capture.output(lm.summary, file = paste(ID[i],'.txt')) # write out summary
-  pdf(file=paste(ID[i], ".pdf", sep="")) # plot in pdf
-  print(qplot(seconds, mloss, data=mass, geom="line"))
+ID <- unique(balance_data$utrial)
+for (i in 1: length(unique(ID))) {  
+  onelabel <- filter(balance_data, utrial==ID[i]) # subset
+  mod.mass <- lm(mass ~ nsec, data = onelabel) #linear model log(mass)?
+  lm.summary <- summary(mod.mass) # lm summary info
+   # write out summary:
+  capture.output(lm.summary, file = file.path("../results/", paste(ID[i],'.txt')))
+  pdf(file.path("../results", file=paste(ID[i], ".pdf", sep=""))) # plot in pdf
+  print(qplot(nsec, mass, data=onelabel, geom="line"))
   dev.off()
 }
+
+ggplot(filter(balance_data, utrial!="sn25-08"), aes(nsec, mass2)) + geom_line() + facet_wrap(~ utrial)
+
