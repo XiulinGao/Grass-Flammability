@@ -17,7 +17,7 @@ balance_sum <- balance_data %>% group_by(label, trial, utrial, sp.cd) %>%
 
 
 ##########################################################################
-## Temporary approach 1: spearate models per trial
+## Temporary approach 1: separate models per trial
 bytrial <- balance_data %>% group_by(label, sp.cd, utrial)
 
 flamingMods <- bytrial %>% filter(is.flaming) %>%
@@ -49,15 +49,22 @@ summary(flame.mod)
 
 ##########################################################################
 ## Approach 3: Same as 2 but full bayesian. Use rstan via brms. SLOW! But good
-## coefficient estimates
+## coefficient estimates. Currently does not converge.
 
-flame.mod.bayes <- brm(log(mass) ~ nsec*sp.cd + (1 + nsec|label),
-                       data = filter(balance_data, is.flaming))
+#flame.mod.bayes <- brm(log(mass) ~ nsec*sp.cd + (1 + nsec|label),
+#                       data = filter(balance_data, is.flaming))
 
 # save this!
-saveRDS(flame.mod.bayes, "../results/flame_mod_bayes.rds")
+#saveRDS(flame.mod.bayes, "../results/flame_mod_bayes.rds")
 
-summary(flame.mod.bayes)
+#summary(flame.mod.bayes)
 
 
+# flaming and smoldering:
+comb.mod.bayes <- brm(log(mass) ~ nsec*sp.cd + (1 + nsec|label),
+                       data = filter(balance_data, is.flaming | is.smoldering))
 
+# save this!
+saveRDS(comb.mod.bayes, "../results/flame_mod_bayes.rds")
+
+summary(comb.mod.bayes)
