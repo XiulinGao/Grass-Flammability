@@ -1,8 +1,6 @@
-## biomass-loss-rate.R
+## read_balance_data.R
 ## -------------------
-## plot biomass variation based on time in seconds 
-## and do linear model for calculating biomass loss rate
-
+## Read and clean biomass loss data
 
 library(dplyr)
 library(ggplot2)
@@ -33,24 +31,36 @@ concat_csv_dir <- function(path) {
 }
 
 balance_data <- concat_csv_dir('../data/balance')
-balance_data <- balance_data %>% group_by(label) %>%
-  mutate(mloss= first(mass) - mass, mass2= mass-min(mass), utrial=paste(label, trial, sep="-"))
+
+# get the per trial data:
+burns <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE, na.strings="N/A")
+balance_data <- left_join(balance_data, burns)
+
+balance_data <- balance_data %>%
+  mutate(mass = mass * 0.001) %>% # mass to g
+  group_by(label) %>%
+  mutate(mass.corrected = mass - end.mass,
+         utrial=paste(label, trial, sep="-"),
+         is.flaming = nsec > 50+ignition & nsec < 50+ignition+combustion,
+         is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering )
 
 
-# graph biomass loss based on time in seconds and do linear model for each
-# trial species
-
+# graph biomass loss based on time in seconds
 ID <- unique(balance_data$utrial)
 for (i in 1: length(unique(ID))) {  
   onelabel <- filter(balance_data, utrial==ID[i]) # subset
-  mod.mass <- lm(mass ~ nsec, data = onelabel) #linear model log(mass)?
-  lm.summary <- summary(mod.mass) # lm summary info
-   # write out summary:
-  capture.output(lm.summary, file = file.path("../results/", paste(ID[i],'.txt')))
   pdf(file.path("../results", file=paste(ID[i], ".pdf", sep=""))) # plot in pdf
   print(qplot(nsec, mass, data=onelabel, geom="line"))
   dev.off()
 }
 
-ggplot(filter(balance_data, utrial!="sn25-08"), aes(nsec, mass2)) + geom_line() + facet_wrap(~ utrial)
+## ggplot(balance_data, aes(nsec, log(mass.corrected))) +
+##   geom_line() + facet_wrap(~ utrial)
 
+
+## ggplot(balance_sum, aes(balance.burned, initial.mass - end.mass + fuel.residual, color=sp.cd)) +
+##   geom_point() + geom_abline(intercept=0, slope=1)
+## ggsave("../results/biomass_burned_plot.png")
+
+
+## ggplot(balance_sum, aes(sp.cd, balance.burned)) + geom_violin()
