@@ -14,5 +14,17 @@
 
 ##2016-06-29
 * bi11: some biomass fell onto the ruler, lead to noise
-* erc27: smoldering duration last too long, longer than 50 mins, due to time limitation, stopped the recording before it completely stopped smoldering
 * as25, as29, bi09, as31, bi07, erc11, bi25, bi19 all showed wired balance reading: the reading jumped back to previous biomass reading and decreased at almost same rate, when it reached certain number, jumped back to previous reading again. When this happened, there was no strong air flow, so i wonder if this is the balance issue. 
+
+##2016-07-20
+* no burn notes on this burn
+
+##2016-07-28
+* cs25:biomass fell off to ground
+* cs09: biomass fell off to ground
+* realized that I failed to trigger the hobo logger except the one at 0cm height
+
+##2016-08-03
+* apn17: biomass fell off
+* cs15r, cs41, cs17r and cs09r biomass fell off
+* apn19(test14): this burn was ignited around 50s, but it didn't last due to weak ignition sauce. Thus, it was re-ignited around 92s.
