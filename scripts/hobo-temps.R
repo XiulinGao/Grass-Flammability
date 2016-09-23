@@ -8,17 +8,19 @@ library(tidyr)
 
 TZ = "CST6CDT"
 
-trials <- read.csv("../data/burning-trials.csv", stringsAsFactors=FALSE)
+trials <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE) 
 # unfortunately, there are no "ending times" in this file so this is a bit
 # tricky. This data is fragile because of this oversight: we must assume that
 # the order of observations tells us something about end times.
-trials <- trials %>% mutate(start.time = mdy_hm(str_c(date, " ", start.t), tz=TZ))
-PAD_TIME <- duration(1, units="minutes")
-MAX_DURATION <- duration(2, units="hours")
-trials$end.time <- c(trials$start.time[2:length(trials$start.time)] - PAD_TIME,
-                     trials$start.time[length(trials$start.time)] + MAX_DURATION)
-trials$end.time[trials$end.time - trials$start.time > MAX_DURATION] <-
-    trials$start.time[trials$end.time - trials$start.time > MAX_DURATION] + MAX_DURATION
+trials <- trials %>% mutate(start.time = mdy_hm(str_c(trial.date, " ", start.t), tz=TZ)) %>%
+  mutate(end.time = mdy_hm(str_c(trial.date, " ", end.t), tz=TZ))
+          
+#PAD_TIME <- duration(1, units="minutes")
+#MAX_DURATION <- duration(2, units="hours")
+#trials$end.time <- c(trials$start.time[2:length(trials$start.time)] - PAD_TIME,
+                     #trials$start.time[length(trials$start.time)] + MAX_DURATION)
+#trials$end.time[trials$end.time - trials$start.time > MAX_DURATION] <-
+    #trials$start.time[trials$end.time - trials$start.time > MAX_DURATION] + MAX_DURATION
 trials$interval <- interval(trials$start.time, trials$end.time)
 
 read_hobo_file <- function(filename) {
@@ -67,7 +69,129 @@ get_trial_id <- function(time) {
 }
 
 # assign trial ids
-thermocouples.wide$trial <- unlist(sapply(thermocouples.wide$time, get_trial_id))
+thermocouples.wide$trial <- unlist(sapply(thermocouples.wide$time, get_trial_id)) #can't work here
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # throw away data outside of a trial
 thermocouples.wide <- thermocouples.wide %>% filter(! is.na(trial))
 
