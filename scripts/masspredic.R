@@ -89,10 +89,15 @@ summary(tempca10.mod) #problem: seems need to rescale variable
  summary(tempca.mod)
  anova(tempca.mod)
  
-#2.if mass/volume influences mass loss rate?
-
-
-
+#2.totall biomass density influence ?
+ tolmassca <- tempca %>% mutate (logtolm = log10(10^logmass10 + 10^logmass)) %>%
+   mutate(tvol = vol+vol10) %>% mutate(tbd = logtolm/tvol) 
+ 
+ tmassMod <- lm(log(peak.temp) ~ tbd*sp.cd, data = tolmassca)
+ summary(tmassMod)
+ 
+ 
+ 
 
  
  
