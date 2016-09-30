@@ -25,7 +25,7 @@ bcanopy <- filter(canopy, treatment == 'b')
 #and height. height is just used for biomass above 10cm
 
 #0~10cm
-massMod10 <- lm(log(drym.10) ~ log(tiller.num), data = ucanopy)
+massMod10 <- lm(log10 ~ logtiller*sp.cd, data = ucanopy)
 predictb <- bcanopy %>% mutate (logmass10 = predict(massMod10, newdata = bcanopy))
 
 #>10cm, use both tiller number and height
@@ -38,14 +38,14 @@ predictb <- predictb[, -c(5:8, 13:18, 20:27)]
 #calculate biomass/volume at 0~10 and >10 intervals assuming 
 #canopy geometry as cylinder
 
-cylinderca <- predictb %>% mutate(fuelbed10 = drym.10/vol10) %>%
-  mutate(fuelbed = dry.m/vol)
+cylinderca <- predictb %>% mutate(fuelbed10 = logmass10/vol10)
 
 cylinderca <- cylinderca[, -c(12:13)]
 
 #full_join canopy data with temps.sum data
 
  source("./hobo-temps.R")
+
 
 #due to duplication for 2 trials on 2016/08/03, I will drop 
 #the first record for each, since the first one usually is
@@ -71,8 +71,8 @@ tempca <- tempsum.ca %>% filter(!trial.date=='7/28/16')
 # peak temp at corresponding section
 
 #0~10cm
-tempca10.mod <- lmer(log(peak.temp) ~ log(fuelbed10)*sp.cd + (1 + log(fuelbed10)|label),
-                     data = subset(tempca, location == c('base.B', 'base.A', 'height.10')))
+tempca10.mod <- lm(log(peak.temp) ~ fuelbed10*sp.cd,
+                     data = subset(tempca, location %in% c('base.B', 'base.A', 'height.10')))
 tempca10.mod.null <- lmer(log(peak.temp) ~ log(fuelbed10) + (1 + log(fuelbed10)|label),
                          data = subset(tempca, location == c('base.B', 'base.A', 'height.10')))
 
@@ -92,7 +92,7 @@ summary(tempca10.mod) #problem: seems need to rescale variable
 #linear model for >10cm
 
 byspecies <- tempca %>% group_by(sp.cd)
-masscaMods <- byspecies %>% subset(location == c('height.20', 'height40')) %>%
+masscaMods <- byspecies %>% subset(location %in% c('height.20', 'height40')) %>%
   do(masscaMod = lm(log(peak.temp) ~ fuelbed, data = .))
 
 # use broom::tidy to grab coefficents
