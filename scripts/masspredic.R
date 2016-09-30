@@ -13,34 +13,37 @@ raw.ca $ dia10 <- rowMeans(subset(raw.ca, select = c(wda10.1, wda10.2, wda10.3, 
 raw.ca $ dia <- rowMeans(subset(raw.ca, select = c(wda10.3, wda.1, wda.2, wda.3, wdb10.3,
                                                    wdb.1, wdb.2, wdb.3)), na.rm = TRUE)
 
-canopy <- raw.ca %>% mutate(vol10 = pi*dia10*dia10*10) %>%
+canopy <- raw.ca %>% filter(!sp.cd=="ARPU9") %>%
+  mutate(vol10 = pi*dia10*dia10*10) %>%
   mutate(vol = pi*dia*dia*(height-10))
   
+  ucanopy <- filter(canopy, treatment == 'u') %>%
+  mutate(logmass10=log10(drym.10)) %>%
+  mutate(logtiller=log10(tiller.num)) %>%
+    mutate(logmass=log10(dry.m))
+    
 
-ucanopy <- filter(canopy, treatment == 'u')
-bcanopy <- filter(canopy, treatment == 'b')
+bcanopy <- filter(canopy, treatment == 'b') %>%
+  mutate(logtiller=log10(tiller.num))
 
 
-#use unburned plants as a whole dataset to build biomass predict model on tiller number
-#and height. height is just used for biomass above 10cm
+#use unburned plants canopy architecture dataset to predict biomass
+#for burned plants with using tiller number and height as factors.
+#height is only used for above 10cm plant secntion.
 
 #0~10cm
-massMod10 <- lm(log10 ~ logtiller*sp.cd, data = ucanopy)
-predictb <- bcanopy %>% mutate (logmass10 = predict(massMod10, newdata = bcanopy))
+mass10Mod <- lm(logmass10 ~ logtiller*sp.cd, data = ucanopy)
+predictb <- bcanopy %>% mutate (logmass10 = predict(mass10Mod, newdata = bcanopy))
 
 #>10cm, use both tiller number and height
-massMod11 <- lm(log(dry.m) ~ log(tiller.num) + log(height-10), data = ucanopy)
-predictb <- predictb %>% mutate(logmass11 = predict(massMod11, newdata = bcanopy))
-predictb <- predictb %>% mutate(drym.10 = exp(logmass10)) %>%
-  mutate(dry.m = exp(logmass11))
-predictb <- predictb[, -c(5:8, 13:18, 20:27)]
+massMod <- lm(logmass ~ logtiller*sp.cd + height, data = ucanopy)
+predictb <- predictb %>% mutate(logmass = predict(massMod, newdata = bcanopy))
 
-#calculate biomass/volume at 0~10 and >10 intervals assuming 
-#canopy geometry as cylinder
+#calculate biomass/volume at 0~10 and >10 sections  with assuming 
+#canopy as in cylinder shape.
 
-cylinderca <- predictb %>% mutate(fuelbed10 = logmass10/vol10)
-
-cylinderca <- cylinderca[, -c(12:13)]
+cylinderca <- predictb %>% mutate(massdensity10 = logmass10/vol10) %>%
+  mutate(massdensity = logmass/vol)
 
 #full_join canopy data with temps.sum data
 
@@ -71,12 +74,9 @@ tempca <- tempsum.ca %>% filter(!trial.date=='7/28/16')
 # peak temp at corresponding section
 
 #0~10cm
-tempca10.mod <- lm(log(peak.temp) ~ fuelbed10*sp.cd,
-                     data = subset(tempca, location %in% c('base.B', 'base.A', 'height.10')))
-tempca10.mod.null <- lmer(log(peak.temp) ~ log(fuelbed10) + (1 + log(fuelbed10)|label),
-                         data = subset(tempca, location == c('base.B', 'base.A', 'height.10')))
+tempca10.mod <- lm(log(peak.temp) ~ massdensity10*sp.cd,
+                     data = filter(tempca, location %in% c('base.B', 'base.A', 'height.10')))
 
-anova(tempca10.mod.null, tempca10.mod)
 summary(tempca10.mod) #problem: seems need to rescale variable
 
 #>10cm
@@ -84,22 +84,11 @@ summary(tempca10.mod) #problem: seems need to rescale variable
 #"numbers of observations(=106) <= numbers of random effects(=130) for term
 #(1 + fuelbed|label)"
 
- tempca.mod <- lmer(log(peak.temp) ~ log(fuelbed)*sp.cd + (1 + log(fuelbed)|label),
-                   data = subset(tempca, location == c('height.20', 'height.40')))
- tempca.mod.null <- lmer(log(peak.temp) ~ log(fuelbed) + (1 + log(fuelbed)|label),
-                        data = subset(tempca, location == c('height.20', 'height.40')))
-
-#linear model for >10cm
-
-byspecies <- tempca %>% group_by(sp.cd)
-masscaMods <- byspecies %>% subset(location %in% c('height.20', 'height40')) %>%
-  do(masscaMod = lm(log(peak.temp) ~ fuelbed, data = .))
-
-# use broom::tidy to grab coefficents
-masscaModsCoef <- tidy(masscaMods, masscaMod) %>% filter(term=='fuelbed')
-
-ggplot(masscaModsCoef, aes(sp.cd, estimate)) + geom_point()
-
+ tempca.mod <- lm(log(peak.temp) ~ massdensity*sp.cd,
+                   data = filter(tempca, location %in% c('height.20', 'height.40')))
+ summary(tempca.mod)
+ anova(tempca.mod)
+ 
 #2.if mass/volume influences mass loss rate?
 
 
