@@ -71,9 +71,9 @@ tempca <- tempsum.ca %>% filter(!trial.date=='7/28/16')
 # peak temp at corresponding section
 
 #0~10cm
-tempca10.mod <- lmer(log(peak.temp) ~ fuelbed10*sp.cd + (1 + fuelbed10|label),
+tempca10.mod <- lmer(log(peak.temp) ~ log(fuelbed10)*sp.cd + (1 + log(fuelbed10)|label),
                      data = subset(tempca, location == c('base.B', 'base.A', 'height.10')))
-tempca10.mod.null <- lmer(peak.temp ~ fuelbed10 + (1 + fuelbed10|label),
+tempca10.mod.null <- lmer(log(peak.temp) ~ log(fuelbed10) + (1 + log(fuelbed10)|label),
                          data = subset(tempca, location == c('base.B', 'base.A', 'height.10')))
 
 anova(tempca10.mod.null, tempca10.mod)
@@ -84,10 +84,10 @@ summary(tempca10.mod) #problem: seems need to rescale variable
 #"numbers of observations(=106) <= numbers of random effects(=130) for term
 #(1 + fuelbed|label)"
 
-# tempca.mod <- lmer(log(peak.temp) ~ fuelbed*sp.cd + (1 + fuelbed|label),
-                   #data = subset(tempca, location == c('height.20', 'height.40')))
-# tempca.mod.null <- lmer(log(peak.temp) ~ fuelbed + (1 + fuelbed|label),
-                        #data = subset(tempca, location == c('height.20', 'height.40')))
+ tempca.mod <- lmer(log(peak.temp) ~ log(fuelbed)*sp.cd + (1 + log(fuelbed)|label),
+                   data = subset(tempca, location == c('height.20', 'height.40')))
+ tempca.mod.null <- lmer(log(peak.temp) ~ log(fuelbed) + (1 + log(fuelbed)|label),
+                        data = subset(tempca, location == c('height.20', 'height.40')))
 
 #linear model for >10cm
 
