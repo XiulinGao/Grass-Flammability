@@ -9,9 +9,11 @@ library(tidyr)
 TZ = "CST6CDT"
 
 trials <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE) 
-trials <- trials %>% mutate(start.time = mdy_hm(str_c(trial.date, " ", start.t), tz=TZ)) %>%
-  mutate(end.time = mdy_hm(str_c(trial.date, " ", end.t), tz=TZ),
-         trial.id = paste(trial.date, trial.num, sep="_"))
+trials <- trials %>% mutate(temp = (temp-32)*5/9) %>% 
+                              mutate(start.time = mdy_hm(str_c(trial.date, " ",
+                                                               start.t), tz=TZ)) %>%
+                              mutate(end.time = mdy_hm(str_c(trial.date, " ", end.t), tz=TZ),
+                                     trial.id = paste(trial.date, trial.num, sep="_"))
 
 trials$interval <- interval(trials$start.time, trials$end.time)
 
@@ -28,7 +30,7 @@ read_hobo_file <- function(filename) {
 
 concat_hobo_files <- function(filelist, label){
     l <- lapply(filelist, read_hobo_file)
-    r <- rbind_all(l)
+    r <- bind_rows(l)
     names(r) <- c("time", label)
     return(r)
 }
