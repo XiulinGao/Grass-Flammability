@@ -34,6 +34,7 @@ balance_data <- concat_csv_dir('../data/balance')
 
 # get the per trial data:
 burns <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE, na.strings="N/A")
+burns <- burns %>% mutate(temp = (temp-32)*5/9) #convert fahrenheit to celcius for burn data
 balance_data <- left_join(balance_data, burns)
 
 balance_data <- balance_data %>%
