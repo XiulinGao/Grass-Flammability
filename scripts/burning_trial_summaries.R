@@ -4,17 +4,21 @@
 library(broom)
 library(lme4)
 library(brms) # Bayesian model fititng via stan and rstan
+library(dplyr)
 
 source("./read_balance_data.R")
 
 
+
 # first, some very basic summary values per trial
 balance_sum <- balance_data %>% group_by(label, trial, utrial, sp.cd) %>%
-  summarize(balance.initial = mean(mass[nsec<40]),
+  summarize(balance.initial = mean(mass[nsec<45]),
             balance.final = mean(mass[nsec > (max(nsec) - 30)]),
             balance.burned = balance.initial - balance.final) %>%
   left_join(burns)
-
+# plot to see if balance burned mass deviates from record burned mass significantly
+## ggplot(balance_sum, aes(balance.burned, initial.mass - final.mass - fuel.residual, color=sp.cd)) +
+## geom_point() + geom_abline(intercept=0, slope=1)
 
 ##########################################################################
 ## Temporary approach 1: separate models per trial
@@ -32,7 +36,14 @@ smolderingModsCoef <- tidy(smolderingMods, smolderingMod)  %>% filter(term=="nse
 ggplot(flamingModsCoef, aes(sp.cd, estimate)) + geom_violin()
 ggplot(smolderingModsCoef, aes(sp.cd, estimate)) + geom_violin()
 
-
+# calculate maximum mass loss rate for flaming stage, use diff()
+flaming.maxloss <- bytrial %>% filter(is.flaming) %>%
+  mutate(maxloss.flaming = max(abs(diff(mass)[diff(mass)< 0]))) %>%
+  mutate(maxloss.time = datet[which.max(abs(diff(mass)[diff(mass)< 0]))]) %>%
+  right_join(bytrial)
+  
+  
+  
 ##########################################################################
 ## Approach 2: mixed linear models
 
