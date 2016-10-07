@@ -33,8 +33,12 @@ smolderingMods <- bytrial %>% filter(is.smoldering) %>%
 flamingModsCoef <- tidy(flamingMods, flamingMod) %>% filter(term=="nsec")
 smolderingModsCoef <- tidy(smolderingMods, smolderingMod)  %>% filter(term=="nsec")
 
-ggplot(flamingModsCoef, aes(sp.cd, estimate)) + geom_violin()
+ggplot(filter(flamingModsCoef,estimate <=0 ), aes(sp.cd, estimate)) + geom_violin()
 ggplot(smolderingModsCoef, aes(sp.cd, estimate)) + geom_violin()
+
+ggplot(filter(balance_data, is.flaming & grepl("^apn", label) ), aes(nsec, mass)) +
+    geom_point() + geom_smooth() + facet_wrap(~label)
+
 
 # calculate maximum mass loss rate for flaming stage, use diff()
 flaming.maxloss <- bytrial %>% filter(is.flaming) %>%

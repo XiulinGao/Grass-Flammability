@@ -74,10 +74,14 @@ tempca <- tempsum.ca %>% filter(!trial.date=='7/28/16')
 # peak temp at corresponding section
 
 #0~10cm
-tempca10.mod <- lm(log(peak.temp) ~ massdensity10*sp.cd,
+tempca10.mod <- lm(log(peak.temp) ~ massdensity10*sp.cd*location,
                      data = filter(tempca, location %in% c('base.B', 'base.A', 'height.10')))
 
 summary(tempca10.mod) #problem: seems need to rescale variable
+
+ggplot(tempca, aes(initial.mass-final.mass, log(peak.temp))) +
+    geom_smooth(method="lm") + geom_point() + facet_wrap(~sp.cd)
+
 
 #>10cm
 #linear mixed model can't work here, getting error
