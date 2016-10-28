@@ -8,8 +8,10 @@ library(tidyr)
 
 TZ = "CST6CDT"
 
-trials <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE) 
+trials <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE,
+                   na.strings = c("", "N/A")) 
 trials <- trials %>% mutate(temp = (temp-32)*5/9) %>% 
+                              filter(!sp.cd=="ARPU9") %>%
                               mutate(start.time = mdy_hm(str_c(trial.date, " ",
                                                                start.t), tz=TZ)) %>%
                               mutate(end.time = mdy_hm(str_c(trial.date, " ", end.t), tz=TZ),

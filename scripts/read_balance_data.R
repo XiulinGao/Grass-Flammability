@@ -33,14 +33,14 @@ concat_csv_dir <- function(path) {
 balance_data <- concat_csv_dir('../data/balance')
 
 # get the per trial data:
-burns <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE, na.strings="N/A")
+burns <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE, na.strings=c("N/A", ""))
 burns <- burns %>% mutate(temp = (temp-32)*5/9) #convert fahrenheit to celcius for burn data
 balance_data <- left_join(balance_data, burns)
 
 balance_data <- balance_data %>%
   mutate(mass = mass * 0.001) %>% # mass to g
   group_by(label) %>%
-  mutate(mass.corrected = mass - end.mass,
+  mutate(total.mass = mass - final.mass,
          utrial=paste(label, trial, sep="-"),
          is.flaming = nsec > 50+ignition & nsec < 50+ignition+combustion,
          is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering )
@@ -55,12 +55,11 @@ for (i in 1: length(unique(ID))) {
   dev.off()
 }
 
-## ggplot(balance_data, aes(nsec, log(mass.corrected))) +
+## ggplot(balance_data, aes(nsec, log(total.mass))) +
 ##   geom_line() + facet_wrap(~ utrial)
 
-
 ## ggplot(balance_sum, aes(balance.burned, initial.mass - end.mass + fuel.residual, color=sp.cd)) +
-##   geom_point() + geom_abline(intercept=0, slope=1)
+## geom_point() + geom_abline(intercept=0, slope=1)
 ## ggsave("../results/biomass_burned_plot.png")
 
 
