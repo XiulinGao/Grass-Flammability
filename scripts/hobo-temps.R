@@ -53,8 +53,14 @@ height40 <- concat_hobo_files(list.files("../data/hobo",
 # Now merge all of these together to get one continuous time series (wide
 # data). Do we even need this? Really only necessary if we ever compare temps
 # across thermocouples.
-thermocouples.wide <- basea %>% full_join(baseb) %>% full_join(height10) %>% 
-                      full_join(height20) %>% full_join(height40)
+thermocouples.wide <- basea %>% full_join(baseb) %>% 
+                      full_join(height10) %>% 
+                      full_join(height20) %>% full_join(height40) 
+
+#take average temp for base
+thermocouples.wide$base <- rowMeans(subset(thermocouples.wide, select= c(base.A, base.B)),
+                                    na.rm = TRUE)
+thermocouples.wide <- thermocouples.wide[, -c(2:3)]#get rid off base.A, base.B
                       
 
 ## get a trial ID from a time point
@@ -69,6 +75,7 @@ thermocouples.wide$trial.id <- unlist(sapply(thermocouples.wide$time, get_trial_
 
 # throw away data outside of a trial
 thermocouples.wide <- thermocouples.wide %>% filter(! is.na(trial.id))
+
 
 # Long form data porbably more useful for per thermcouple summaries.
 thermocouples.long <- thermocouples.wide %>% gather(location, temperature, -time, -trial.id)
