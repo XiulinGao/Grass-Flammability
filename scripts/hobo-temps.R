@@ -6,18 +6,7 @@ library(lubridate)
 library(stringr)
 library(tidyr)
 
-TZ = "CST6CDT"
-
-trials <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE,
-                   na.strings = c("", "N/A")) 
-trials <- trials %>% mutate(temp = (temp-32)*5/9) %>% 
-                              filter(!sp.cd=="ARPU9") %>%
-                              mutate(start.time = mdy_hm(str_c(trial.date, " ",
-                                                               start.t), tz=TZ)) %>%
-                              mutate(end.time = mdy_hm(str_c(trial.date, " ", end.t), tz=TZ),
-                                     trial.id = paste(trial.date, trial.num, sep="_"))
-
-trials$interval <- interval(trials$start.time, trials$end.time)
+source("./clean_up_trial.R") #grab basic trial summary data
 
 read_hobo_file <- function(filename) {
     hobo <- read.csv(filename, skip=2, header=FALSE)
@@ -72,6 +61,8 @@ get_trial_id <- function(time) {
 
 # assign trial ids
 thermocouples.wide$trial.id <- unlist(sapply(thermocouples.wide$time, get_trial_id))
+
+
 
 # throw away data outside of a trial
 thermocouples.wide <- thermocouples.wide %>% filter(! is.na(trial.id))
