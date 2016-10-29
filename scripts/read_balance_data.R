@@ -43,7 +43,8 @@ balance_data <- balance_data %>%
   mutate(total.mass = mass - final.mass,
          utrial=paste(label, trial, sep="-"),
          is.flaming = nsec > 50+ignition & nsec < 50+ignition+combustion,
-         is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering )
+         is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering )%>%
+         filter(!sp.cd=="ARPU9")
 
 
 # graph biomass loss based on time in seconds
