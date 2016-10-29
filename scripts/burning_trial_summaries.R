@@ -32,50 +32,23 @@ smolderingMods <- bytrial %>% filter(is.smoldering) %>%
 # use broom::tidy to grab coefficents easily
 flamingModsCoef <- tidy(flamingMods, flamingMod) %>% filter(term=="nsec")
 smolderingModsCoef <- tidy(smolderingMods, smolderingMod)  %>% filter(term=="nsec")
+#Mods does not contain all burns. not included burns are "ec27-04"  "bi01-09"  "erc27-04" "erc27-01" "apn09-16"
+#Need to check out reason: ok, ec27 just has 6 observation, the others have no ignition time recorded
 
-ggplot(flamingModsCoef, aes(sp.cd, estimate)) + geom_violin()
-ggplot(smolderingModsCoef, aes(sp.cd, estimate)) + geom_violin()
+#ggplot(flamingModsCoef, aes(sp.cd, estimate)) + geom_violin()
+#ggplot(smolderingModsCoef, aes(sp.cd, estimate)) + geom_violin()
 
-# calculate maximum mass loss rate for flaming stage, use diff()
-flaming.maxloss <- bytrial %>% filter(is.flaming) %>%
-  mutate(maxloss.flaming = max(abs(diff(mass)[diff(mass)< 0]))) %>%
-  mutate(maxloss.time = datet[which.max(abs(diff(mass)[diff(mass)< 0]))]) %>%
-  right_join(bytrial)
-  
-  
-  
 ##########################################################################
 ## Approach 2: mixed linear models
 
 # Run model with sp.cd and trial as factors
-flame.mod <- lmer(log(mass) ~ nsec*sp.cd + (1 + nsec|label),
-                      data = filter(balance_data, is.flaming))
-flame.mod.null <- lmer(log(mass) ~ nsec + (1 + nsec|label),
-                       data = filter(balance_data, is.flaming))
+##flame.mod <- lmer(log(mass) ~ nsec*sp.cd + (1 + nsec|label),
+                      #data = filter(balance_data, is.flaming))
+##flame.mod.null <- lmer(log(mass) ~ nsec + (1 + nsec|label),
+                       #data = filter(balance_data, is.flaming))
 
-anova(flame.mod.null, flame.mod)
+##anova(flame.mod.null, flame.mod)
 # so species matters
 
-summary(flame.mod)
+##summary(flame.mod)
 
-##########################################################################
-## Approach 3: Same as 2 but full bayesian. Use rstan via brms. SLOW! But good
-## coefficient estimates. Currently does not converge.
-
-#flame.mod.bayes <- brm(log(mass) ~ nsec*sp.cd + (1 + nsec|label),
-#                       data = filter(balance_data, is.flaming))
-
-# save this!
-#saveRDS(flame.mod.bayes, "../results/flame_mod_bayes.rds")
-
-#summary(flame.mod.bayes)
-
-
-# flaming and smoldering:
-comb.mod.bayes <- brm(log(mass) ~ nsec*sp.cd + (1 + nsec|label),
-                       data = filter(balance_data, is.flaming | is.smoldering))
-
-# save this!
-saveRDS(comb.mod.bayes, "../results/flame_mod_bayes.rds")
-
-summary(comb.mod.bayes)
