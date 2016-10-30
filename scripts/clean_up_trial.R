@@ -31,3 +31,15 @@ trials <- trials %>% filter(!trial.id %in% dropid)
 
 trials$interval <- interval(trials$start.time, trials$end.time)
 
+#fix ignition time NA issue by assiging average ignition time to NA
+
+get_average_ignition <- function(ignition){
+  for (i in 1:length(ignition)){
+    if(is.na(ignition[i]))
+      ignition[i] <- round(mean(trials$ignition[trials$sp.cd==trials$sp.cd[i]],
+                               na.rm=T),2)
+  }
+  return(ignition)
+}
+
+trials$ignition <- get_average_ignition(trials$ignition)
