@@ -6,6 +6,10 @@ library(dplyr)
 library(ggplot2)
 library(stringr)
 
+#get data per trial
+
+source("./clean_up_trial.R")
+
 # read and clean a single balance file produced by serial-balance.py. See
 # https://github.com/schwilklab/serial-balance
 read_balance_file <- function(filename) {
@@ -32,10 +36,8 @@ concat_csv_dir <- function(path) {
 
 balance_data <- concat_csv_dir('../data/balance')
 
-# get the per trial data:
-burns <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE, na.strings=c("N/A", ""))
-burns <- burns %>% mutate(temp = (temp-32)*5/9) #convert fahrenheit to celcius for burn data
-balance_data <- left_join(balance_data, burns)
+
+balance_data <- left_join(balance_data, trials)
 
 balance_data <- balance_data %>%
   mutate(mass = mass * 0.001) %>% # mass to g
@@ -43,8 +45,7 @@ balance_data <- balance_data %>%
   mutate(total.mass = mass - final.mass,
          utrial=paste(label, trial, sep="-"),
          is.flaming = nsec > 50+ignition & nsec < 50+ignition+combustion,
-         is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering )%>%
-         filter(!sp.cd=="ARPU9")
+         is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering )
 
 
 # graph biomass loss based on time in seconds
