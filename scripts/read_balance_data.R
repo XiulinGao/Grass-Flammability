@@ -34,9 +34,10 @@ concat_csv_dir <- function(path) {
   return(bind_rows(tables))
 }
 
-balance_data <- concat_csv_dir('../data/balance')
+balance_data <- concat_csv_dir('../data/balance') %>% 
+  filter(!label=='ap01') #throw away ARPU9
 
-balance_data <- left_join(balance_data, trials)
+balance_data <- left_join(balance_data, trials) 
 
 balance_data <- balance_data %>%
   mutate(mass = mass * 0.001) %>% # mass to g
