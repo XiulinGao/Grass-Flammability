@@ -9,13 +9,12 @@ library(dplyr)
 source("./read_balance_data.R")
 
 
-
 # first, some very basic summary values per trial
 balance_sum <- balance_data %>% group_by(label, trial, utrial, sp.cd) %>%
   summarize(balance.initial = mean(mass[nsec<45]),
             balance.final = mean(mass[nsec > (max(nsec) - 30)]),
             balance.burned = balance.initial - balance.final) %>%
-  left_join(burns)
+  left_join(trials) 
 # plot to see if balance burned mass deviates from record burned mass significantly
 ## ggplot(balance_sum, aes(balance.burned, initial.mass - final.mass - fuel.residual, color=sp.cd)) +
 ## geom_point() + geom_abline(intercept=0, slope=1)

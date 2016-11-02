@@ -61,7 +61,7 @@ get_trial_id <- function(time) {
 
 # assign trial ids
 thermocouples.wide$trial.id <- unlist(sapply(thermocouples.wide$time, get_trial_id))
-
+#bi21 is dropped off at this step, and I don't know why
 
 
 # throw away data outside of a trial
@@ -80,4 +80,5 @@ temps.sum <- thermocouples.long %>% group_by(trial.id, location) %>%
               peak.time = time[which(peak.temp == temperature)[1]],
               num.NA = sum(is.na(temperature))) %>%
     full_join(trials)
+
 

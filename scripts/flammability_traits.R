@@ -11,15 +11,7 @@ source('./hobo-temps.R') # grab temperature data
 #the first record for each, since the first one usually is
 # the failed trial with incomplete records.
 
-#find the duplicated trial id
-n1 <- trials$trial.date[duplicated(trials$label)]
-n2 <- trials$trial.num[duplicated(trials$label)] -1 #the one needs to be droped is 
-# before this duplicated one
-dropid <- paste(n1, n2, sep="_")
-#drop the rows of duplicated trials
 
-drop <- temps.sum %>% subset(trial.id == dropid[1]) %>%
-  full_join(subset(temps.sum, trial.id == dropid[2]))
 
 peaktemp.sum <- anti_join(temps.sum, drop) 
 peaktemp.sum <- peaktemp.sum[order(peaktemp.sum$trial.id, peaktemp.sum$location), ]#organize 
