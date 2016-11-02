@@ -13,6 +13,9 @@ source("./biomass_density_prediction.R")# architecture data
 all_burns <- left_join(temps.sum, flamingModsCoef) %>%
    left_join(mass_density)
 
+#filter trials that actually have positive biomass 'loss' rate
+all_burns <- all_burns %>% filter(estimate<0)
+
 # find all_burns arr missing some canopy data,which should not happen
 # since canopy data should be measred for every single trial,check it out.
 #cause is wrong data entering for pair of erc29 and species code of cs39
