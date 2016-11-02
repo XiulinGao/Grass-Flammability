@@ -31,15 +31,31 @@ trials <- trials %>% filter(!trial.id %in% dropid)
 
 trials$interval <- interval(trials$start.time, trials$end.time)
 
+#since trial.num in trials are in different form compared to balance_data
+#('1-9' vs. '01-09'), here I gonna turn them in to the same format as
+#balance_data, for the sake of safer data join in the future
+
+get_double_digit <- function(trial.num) { 
+  num <- list(1, 2, 3, 4, 5, 6, 7, 8, 9)
+  if (trial.num %in% num) 
+    trial.num = paste('0', trial.num, sep='')
+    return(trial.num)
+}
+trials$trial.num <- sapply(trials$trial.num, get_double_digit)
+
+#then get utrial
+trials <- trials %>% mutate(utrial = paste(label, trial.num, sep='-'))
+
 #fix ignition time NA issue by assiging average ignition time to NA
 
 get_average_ignition <- function(ignition){
   for (i in 1:length(ignition)){
     if(is.na(ignition[i]))
       ignition[i] <- round(mean(trials$ignition[trials$sp.cd==trials$sp.cd[i]],
-                               na.rm=T),2)
+                               na.rm=TRUE),2)
   }
   return(ignition)
 }
 
 trials$ignition <- get_average_ignition(trials$ignition)
+
