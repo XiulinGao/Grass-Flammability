@@ -36,16 +36,17 @@ concat_csv_dir <- function(path) {
 
 balance_data <- concat_csv_dir('../data/balance')
 
+balance_data <- balance_data %>% group_by(label) %>%
+  mutate(utrial=paste(label, trial, sep='-'))
 
 balance_data <- left_join(balance_data, trials)
 
 balance_data <- balance_data %>%
   mutate(mass = mass * 0.001) %>% # mass to g
   group_by(label) %>%
-  mutate(total.mass = mass - final.mass,
-         utrial=paste(label, trial, sep="-"),
-         is.flaming = nsec > 50+ignition & nsec < 50+ignition+combustion,
-         is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering )
+  mutate( is.flaming = nsec > 50+ignition & nsec < 50+ignition+combustion,
+          is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering )
+         
 
 
 # graph biomass loss based on time in seconds
