@@ -14,12 +14,19 @@ all_burns <- left_join(temps.sum, flamingModsCoef) %>%
    left_join(mass_density)
 
 #filter trials that actually have positive biomass 'loss' rate
-all_burns <- all_burns %>% filter(estimate<0)
+#and log total mass
+all_burns <- all_burns %>% filter(estimate<0) %>%
+  mutate(logtmass=log10(total.mass))
 
-# find all_burns arr missing some canopy data,which should not happen
-# since canopy data should be measred for every single trial,check it out.
-#cause is wrong data entering for pair of erc29 and species code of cs39
-#, thus when they are joined by pair and species code, it gets lost. fixed
+temp_balance <- filter(all_burns, !is.na(peak.temp))#throw away dataset with no 
+#temperature data 
+
+#subset data for sec <10 and >10, mainly is used for temp data
+temp10 <- filter(temp_balance, location %in% c('base', 'height.10')) 
+temp <- filter(temp_balance, location %in% c('height.20', 'height.40'))
+
+
+
 
 
   
