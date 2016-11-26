@@ -1,6 +1,5 @@
 # Read hobo data logger temperature data, split into sections by burn trial, and
 # summarize for each trial
-
 library(dplyr)
 library(lubridate)
 library(stringr)
@@ -46,9 +45,17 @@ thermocouples.wide <- basea %>% full_join(baseb) %>%
                       full_join(height10) %>% 
                       full_join(height20) %>% full_join(height40) 
 
-#take average temp for base
+#take average temp for base, then get ave for below and above 10cm
 thermocouples.wide$base <- rowMeans(subset(thermocouples.wide, select= c(base.A, base.B)),
-                                    na.rm = TRUE)
+                                    na.rm = TRUE) 
+thermocouples.wide$below.sec <- rowMeans(subset(thermocouples.wide, select=c(base, 
+                                    height.10)), na.rm = TRUE) 
+thermocouples.wide$above.sec <- rowMeans(subset(thermocouples.wide, select=c(height.20,
+                                    height.40)), na.rm=TRUE)
+
+thermocouples.wide <- thermocouples.wide %>% mutate_each(funs(round(.,2)), 
+                                                         below.sec, above.sec)
+thermocouples.sec <- thermocouples.wide[, -c(2:7)]
 thermocouples.wide <- thermocouples.wide[, -c(2:3)]#get rid off base.A, base.B
                       
 
@@ -61,15 +68,18 @@ get_trial_id <- function(time) {
 
 # assign trial ids
 thermocouples.wide$trial.id <- unlist(sapply(thermocouples.wide$time, get_trial_id))
+thermocouples.sec$trial.id <- unlist(sapply(thermocouples.sec$time, get_trial_id))
 #bi21 is dropped off at this step, and I don't know why
 
 
 # throw away data outside of a trial
 thermocouples.wide <- thermocouples.wide %>% filter(! is.na(trial.id))
+thermocouples.sec <- thermocouples.sec %>% filter(!is.na(trial.id))
 
 
 # Long form data porbably more useful for per thermcouple summaries.
 thermocouples.long <- thermocouples.wide %>% gather(location, temperature, -time, -trial.id)
+thermocouples.sec.long <- thermocouples.sec %>% gather(location, temperature, -time, -trial.id)
 
 ## then do the summary
 threshold=60 # temperature threshold in degrees C
@@ -81,4 +91,14 @@ temps.sum <- thermocouples.long %>% group_by(trial.id, location) %>%
               num.NA = sum(is.na(temperature))) %>%
     full_join(trials)
 
+tempsec.sum <- thermocouples.sec.long %>% group_by(trial.id, location) %>%
+  summarise(dur = sum(temperature > threshold),
+            degsec = sum(temperature[temperature > threshold]),
+            peak.temp = max(temperature, na.rm=TRUE),
+            peak.time = time[which(peak.temp == temperature)[1]],
+            num.NA = sum(is.na(temperature))) %>%
+  full_join(trials) 
 
+
+  
+  

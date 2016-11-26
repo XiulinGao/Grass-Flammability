@@ -24,13 +24,20 @@ balance_sum <- balance_data %>% group_by(label, trial, utrial, sp.cd) %>%
 bytrial <- balance_data %>% group_by(label, sp.cd, utrial)
 
 flamingMods <- bytrial %>% filter(is.flaming) %>%
-  do(flamingMod = lm(log(mass) ~ nsec, data = .))
+  do(flamingMod = lm(mass ~ nsec, data = .)) 
 smolderingMods <- bytrial %>% filter(is.smoldering) %>%
-  do(smolderingMod = lm(log(mass) ~ nsec, data = .))
+  do(smolderingMod = lm(mass ~ nsec, data = .))
 
 # use broom::tidy to grab coefficents easily
-flamingModsCoef <- tidy(flamingMods, flamingMod) %>% filter(term=="nsec")
-smolderingModsCoef <- tidy(smolderingMods, smolderingMod)  %>% filter(term=="nsec")
+flamingModsCoef <- tidy(flamingMods, flamingMod) %>% 
+  filter(term=="nsec",  p.value < 0.01) %>%#throw non-sig
+  filter(estimate<0)
+  colnames(flamingModsCoef)[5] <- "lossrate" #change estimate to lossrate
+  
+smolderingModsCoef <- tidy(smolderingMods, smolderingMod)  %>% 
+  filter(term=="nsec",p.value <0.01) %>%#throw non-sig
+  filter(estimate<0)
+colnames(smolderingModsCoef)[5] <- "lossrate"
 #Mods does not contain all burns. not included burns are "ec27-04"  "bi01-09"  "erc27-04" "erc27-01" "apn09-16"
 #Need to check out reason: ok, ec27 just has 6 observation, the others have no ignition time recorded
 

@@ -58,7 +58,7 @@ arcmass <- predictmass %>% mutate(vol10 = pi*dia10^2 *10/4) %>%
 #density is not normally distributed, log10(x+1) fixed it with avoiding negative value
 
 #clean up arcmass by dropping data that won't be used for later analysis
-mass_density <- arcmass[, c("label", "pair", "treatment", "sp.cd", "height", "h_above10", 
+mass.density <- arcmass[, c("label", "pair", "treatment", "sp.cd", "height", "h_above10", 
                           "logmass10", "logmass", "density10", "logden10", "density","logden")]
  
 
