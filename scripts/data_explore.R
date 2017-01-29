@@ -3,8 +3,6 @@
 ###datasets, which will be used as a guide for analysis
 
 source("./final_summary_dataset.R")
-
-
 ##1. If there is species variation in mass loss rate, duration,
 ##total degree of temp which is above 60 and flame height?
 #1)speceis variation in mass loss rate
