@@ -14,123 +14,137 @@ species <- c("Agropyron smithii", "Aristida purpurea", "Bromus inermis",
 "Panicum anceps", "Stipa neomexicana")
 color <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
 "#0072B2", "#D55E00", "#CC79A7")
+library(pcaMethods)
 ```
 
-#1a. What are the flammability axes regarding my data?
+#1a. What are the flammability axes?
 
- how flammability measurement correlated 
+ 1) how flammability measurement correlated 
  
 ```{r pair_plot}
-pairs(flamabove.pca[, 4:8], 
-      main="explore correlation between flammability measures 
+
+flam.alldata %>% filter(location == "above.sec") %>%
+  subset(select = c("dur", "degsec", "peak.temp", "lossrate",
+                     "max.fh")) %>%
+  pairs(main="explore correlation between flammability measures 
       during flaming at >10cm section")
-pairs(flambelow.pca[, 4:8],
-      main="explore correlation between flammability measures
-      during flaming at <10cm section")
-pairs(smogabove.pca[, 4:8],
-      main="explore correlation between flammability measures 
-      during smoldering at >10cm section")
-pairs(smogbelow.pca[, 4:8],
-      main="explore correlation between flammability measures
-      during smoldering at <10cm section")
+
+
+smog.alldata %>% filter(location == "below.sec") %>%
+  subset(select = c("dur", "degsec", "peak.temp", "lossrate",
+                    "max.fh")) %>%
+  pairs(main="explore correlation between flammability measures
+        during smoldering at <10cm section")
+
 ```
+at flaming stage above 10cm plant section: duration is positively correlated with total degree of temp(>60) and peak temp. when look at the correlation between duration and biomass loss rate, i found when loss rate is fast no duration is long, however, there is long duration at slow biomass loss rate, but no general trend exists. 
 
-There are correlations between every other two variables for flammability measurements during
-flaming and smoldering stage at above 10cm section. However, at below 10cm section, correlation only exists between duration and total degree of temp above 60, peak temperature and total degree of temp above 60 for both flaming and smoldering stage.
 
-do pca to see what exactly the flammability axes are
+at smoldering stage below 10cm plant section:
+
+2) how many flammability axes there are
 
 ```{r flamma_pca}
-flamabove.PCA <- princomp(flamabove.pca[, 4:8], cor=TRUE)
+
+flamabove.PCA <- flam.alldata %>% filter(location == "above.sec") %>%
+  subset(select = c("dur", "degsec", "peak.temp", "lossrate",
+                     "max.fh")) %>% pca(nPcs=5, method="ppca", center=TRUE,
+                                        scale="uv")
 biplot(flamabove.PCA)
 summary(flamabove.PCA)
-flamabove.PCA$loadings
-flamabove.pca$comp1 <- unlist(flamabove.PCA$scores[, 1])
-flamabove.pca$comp2 <- unlist(flamabove.PCA$scores[, 2])
+loadings(flamabove.PCA)
+flam.above$PC1 <- unlist(scores(flamabove.PCA)[, 1])
+flam.above$PC2 <- unlist(scores(flamabove.PCA)[, 2])
 
-flambelow.PCA <- princomp(flambelow.pca[, 4:8], cor=TRUE)
+flambelow.PCA <- flam.alldata %>% filter(location == "below.sec") %>%
+  subset(select = c("dur", "degsec", "peak.temp", "lossrate",
+                     "max.fh")) %>% pca(nPcs=5, method="ppca", center=TRUE,
+                                        scale="uv")
 biplot(flambelow.PCA)
 summary(flambelow.PCA)
-flambelow.PCA$loadings
-flambelow.pca$comp1 <- unlist(flambelow.PCA$scores[, 1])
-flambelow.pca$comp2 <- unlist(flambelow.PCA$scores[, 2])
+loadings(flambelow.PCA)
+flambelow.PC1 <- as.data.frame(scores(flambelow.PCA)[, 1])
+flambelow.PC2 <- as.data.frame(scores(flambelow.PCA)[, 2])
 
-smogabove.PCA <- princomp(smogabove.pca[, 4:8], cor=TRUE)
+smogabove.PCA <- smog.alldata %>% filter(location == "above.sec") %>%
+  subset(select = c("dur", "degsec", "peak.temp", "lossrate",
+                     "max.fh")) %>% pca(nPcs=5, method="ppca", center=TRUE,
+                                        scale="uv")
 biplot(smogabove.PCA)
 summary(smogabove.PCA)
-smogabove.PCA$loadings
-smogabove.pca$comp1 <- unlist(smogabove.PCA$scores[, 1])
-smogabove.pca$comp2 <- unlist(smogabove.PCA$scores[, 2])
+loadings(smogabove.PCA)
+smogabove.PC1 <- as.data.frame(scores(smogabove.PCA)[, 1])
+smogabove.PC2 <- as.data.frame(scores(smogabove.PCA)[, 2])
 
-smogbelow.PCA <- princomp(smogbelow.pca[, 4:8], cor=TRUE)
+smogbelow.PCA <- smog.alldata %>% filter(location =="below.sec") %>%
+  subset(select = c("dur", "degsec", "peak.temp", "lossrate",
+                    "max.fh")) %>% pca(nPcs=5, method="ppca", senter=TRUE,
+                                       scale="uv")
 biplot(smogbelow.PCA)
 summary(smogbelow.PCA)
-smogbelow.PCA$loadings
-smogbelow.pca$comp1 <- unlist(smogbelow.PCA$scores[, 1])
-smogbelow.pca$comp2 <- unlist(smogbelow.PCA$scores[, 2])
+smogbelow.loadings <- loadings(smogbelow.PCA)
+smog.below$PC1 <- unlist(scores(smogbelow.PCA)[, 1])
+smog.below$PC2 <- unlist(scores(smogbelow.PCA)[, 2])
 ```
 
-Based on the result, first two components explained 73%~81% variance of all flammability measurement data,thus further analysis can be based on the first two flammability axes.
+Based on the result, first two components explained 77%~82% variance of all flammability data, so there are two flammability axes. At flaming stage, the first component is more related to rate of heat release,and the the second component is more related to total heat release. I don't know how to explain components at smoldering stage...
 
 
 #1b. Do two flammability axes vary acorss species and how? 
+
 ```{r flamma_species_variation_flamming}
-ggplot(flamabove.pca, aes(sp.cd, comp1, color=sp.cd)) + geom_boxplot() +
+ggplot(flam.above, aes(sp.cd, PC1, color=sp.cd)) + geom_boxplot() +
   labs(title="First flammability axis at flamming stage(>10cm)\n",
        y="Flmmability axis1", x="Species",
        color="species name\n") +
   scale_color_manual(labels=species, values= color) +
   theme(axis.text.x=element_blank())
 
-ggplot(flamabove.pca, aes(sp.cd, comp2, color=sp.cd)) + geom_boxplot() +
+ggplot(flam.above, aes(sp.cd, PC2, color=sp.cd)) + geom_boxplot() +
   labs(title="Second flammability axis at flamming stage(>10cm)\n",
        y="Flmmability axis2", x="Species",
        color="species name\n") +
   scale_color_manual(labels=species, values= color) +
   theme(axis.text.x=element_blank())
 
-ggplot(flambelow.pca, aes(sp.cd, comp1, color=sp.cd)) + geom_boxplot() +
-  labs(title="First flammability axis at flamming stage(<10cm)\n",
-       y="Flmmability axis1", x="Species",
-       color="species name\n") +
-  scale_color_manual(labels=species, values= color) +
-  theme(axis.text.x=element_blank())
+#ggplot(flambelow.pca, aes(sp.cd, comp1, color=sp.cd)) + geom_boxplot() +
+  #labs(title="First flammability axis at flamming stage(<10cm)\n",
+       #y="Flmmability axis1", x="Species",
+       #color="species name\n") +
+  #scale_color_manual(labels=species, values= color) +
+  #theme(axis.text.x=element_blank())
 
-ggplot(flambelow.pca, aes(sp.cd, comp2, color=sp.cd)) + geom_boxplot() +
-  labs(title="Second flammability axis at flamming stage(<10cm)\n",
-       y="Flmmability axis2", x="Species",
-       color="species name\n") +
-  scale_color_manual(labels=species, values= color) +
-  theme(axis.text.x=element_blank())
+#ggplot(flambelow.pca, aes(sp.cd, comp2, color=sp.cd)) + geom_boxplot() +
+  #color="species name\n") +
+  #scale_color_manual(labels=species, values= color) +
+  #theme(axis.text.x=element_blank())
 ```
 
-for flaming stage at above 10cm section: regarding the first aixs, Eragrostis curvula and Stipa neomexicana behaved differently than the others, there is no much difference among the other. for the second aixs, may only Eragrostis behaved differently from the others and no much difference among the other species. 
 
-at below 10cm section: regarding the first axis, Aristida, Eragrostis, Panicum and Stipa are different from the others, no much difference among the other species. Meanwhile, Panicum is much different from the other three. for the second axis, Agropyron, Bromus and Stipa are similar to each other. Aristida, Elymus and Panicum are similar to each other. Chasmanthium and Eragrostis are similar.
 
 ```{r flamma_species_variation_smoldering}
-ggplot(smogabove.pca, aes(sp.cd, comp1, color=sp.cd)) + geom_boxplot() +
-  labs(title="First flammability axis at smoldering stage(>10cm)\n",
-       y="Flmmability axis1", x="Species",
-       color="species name\n") +
-  scale_color_manual(labels=species, values= color) +
-  theme(axis.text.x=element_blank())
+#ggplot(smogabove.pca, aes(sp.cd, comp1, color=sp.cd)) + geom_boxplot() +
+  #labs(title="First flammability axis at smoldering stage(>10cm)\n",
+       #y="Flmmability axis1", x="Species",
+       #color="species name\n") +
+  #scale_color_manual(labels=species, values= color) +
+  #theme(axis.text.x=element_blank())
 
-ggplot(smogabove.pca, aes(sp.cd, comp2, color=sp.cd)) + geom_boxplot() +
-  labs(title="Second flammability axis at smoldering stage(>10cm)\n",
-       y="Flmmability axis2", x="Species",
-       color="species name\n") +
-  scale_color_manual(labels=species, values= color) +
-  theme(axis.text.x=element_blank())
+#ggplot(smogabove.pca, aes(sp.cd, comp2, color=sp.cd)) + geom_boxplot() +
+  #labs(title="Second flammability axis at smoldering stage(>10cm)\n",
+       #y="Flmmability axis2", x="Species",
+       #color="species name\n") +
+  #scale_color_manual(labels=species, values= color) +
+  #theme(axis.text.x=element_blank())
 
-ggplot(smogbelow.pca, aes(sp.cd, comp1, color=sp.cd)) + geom_boxplot() +
+ggplot(smog.below, aes(sp.cd, PC1, color=sp.cd)) + geom_boxplot() +
   labs(title="First flammability axis at smoldering stage(<10cm)\n",
        y="Flmmability axis1", x="Species",
        color="species name\n") +
   scale_color_manual(labels=species, values= color) +
   theme(axis.text.x=element_blank())
 
-ggplot(smogbelow.pca, aes(sp.cd, comp2, color=sp.cd)) + geom_boxplot() +
+ggplot(smog.below, aes(sp.cd, PC2, color=sp.cd)) + geom_boxplot() +
   labs(title="Second flammability axis at smoldering stage(<10cm)\n",
        y="Flmmability axis2", x="Species",
        color="species name\n") +
@@ -138,27 +152,6 @@ ggplot(smogbelow.pca, aes(sp.cd, comp2, color=sp.cd)) + geom_boxplot() +
   theme(axis.text.x=element_blank())
 ```
 
-for smoldering stage(>10cm): regarding the first flammability axis, Eragrostis curvula, Panicum anceps and Stipa neomexicana behaved differently from the others. Meanwhile, Panicum behaved differently from Stipa and Eragrostis; and when look at the second flammability axis, Agropyron smithii and Bromus intermis can be grouped together, Aristida purpurea, Elymus longifolius, Eragrostis curvula and Stipa neomexicana can be grouped together, and Panicum anceps behaved differently from the others. However, it's wired to explain Chasmanthium latifolium, may due to few data? 
-
-smoldering stage(<10cm): regarding the first flammability axis, Agropyron and Bromus are similar to each other and different from the others(may not to Elymus). Aristida and Stipa are much more similar to each other. Elymus, Eragrostis and Panicum are different from the others, meanwhile, those three bahved differently. Then look at the second axis, Agropyron, Bromus and Eragrostis can be grouped together, Aristida, Elymus and Stipa are similar to each other, Panicum is different from the others
-
-#1c. What variables describe each flammability axis?
-```{r flamma_axes_meaning}
-biplot(flamabove.PCA)
-flamabove.PCA$loadings
-
-biplot(flambelow.PCA)
-flambelow.PCA$loadings
-
-biplot(smogabove.PCA)
-smogabove.PCA$loadings
-
-biplot(smogbelow.PCA)
-smogbelow.PCA$loadings
-```
-
-Based on the biplot of PCA and loadings, for flaming stage, the first flammability axis is mainly described by total degree of temperature above 60 degree, which is related to total heat release; the second flammability axis is mainly described by duration of flamming(temp>60) and produced peak temperature, which is related to rate of heat release(I'm not sure)? 
-for smoldering stage, the first flammability axis is mainly described by duration and total degree of temperature above 60 degree, and the second axis is mainly described by peak temperature and biomass loss rate. 
 
 #2a. How do total biomass and mass density vary acorss species?
 ```{r total_biomass_variation_plot}
@@ -224,14 +217,15 @@ the total biomass I used here is the actual biomass I measured from burning tria
 predict biomass. Becasue there will be correlation between biomass density and predict
 total biomass, since calculation of biomass density is established on predict biomass
 
-#3a. How do biomass and mass density influence flammability axes?
+#3a. How do biomass, mass density and biomass ratio influence flammability axes?
 
 ```{r biomass_flammability_flaming_stage}
-massflam.a <- left_join(flamabove.pca, flam.alldata)
-ggplot(massflam.a, aes(logtmass, comp1, color=sp.cd)) + geom_point() +
+
+#total biomass -- axis 1
+
+ggplot(flam.above, aes(logtmass, PC1, color=sp.cd)) + geom_point() +
   geom_smooth(method="lm", se=FALSE) +
-  labs(title="Total biomass influence on first flammability axis at flamming 
-       stage(>10cm)\n",
+  labs(title="Total biomass influence on first flammability axis at flamming stage above 10cm\n",
        y="Flmmability axis1", x="Logged total biomass",
        color="species name\n") +
   scale_color_manual(labels=species, values= color) +
@@ -241,98 +235,120 @@ tmass_axis1LM <- lm(comp1 ~ logtmass, data=massflam.a)
 summary(tmass_axis1LM)
 plot(tmass_axis1LM)
 
-ggplot(massflam.a, aes(logtmass, comp2, color=sp.cd)) + geom_point() +
+#total biomass -- axis 2
+
+ggplot(flam.above, aes(logtmass, PC2, color=sp.cd)) + geom_point() +
   geom_smooth(method="lm", se=FALSE) +
-  labs(title="Total biomass influence on second flammability axis at flamming 
-       stage(>10cm)\n",
+  labs(title="Total biomass influence on second flammability axis at flamming stage above 10cm\n",
        y="Flmmability axis2", x="Logged total biomass",
        color="species name\n") +
   scale_color_manual(labels=species, values= color) +
   theme(axis.text.x=element_blank())
 
-tmass_axis2LM <- lm(comp2 ~ logtmass, data=massflam.a)
+tmass_axis2LM <- lm(PC2 ~ logtmass, data=flam.above)
 summary(tmass_axis2LM)
 
-ggplot(massflam.a, aes(logmass, comp1, color=sp.cd)) + geom_point() +
+#section biomass -- axis1
+#ggplot(massflam.a, aes(logmass, comp1, color=sp.cd)) + geom_point() +
+  #geom_smooth(method="lm", se=FALSE) +
+  #labs(title=" Biomass influence on first flammability axis at flamming 
+       #stage(>10cm)\n",
+       #y="Flmmability axis1", x="Logged biomass of plant section above 10cm",
+       #color="species name\n") +
+  #scale_color_manual(labels=species, values= color) +
+  #theme(axis.text.x=element_blank())
+
+#mass_axis1LM <- lm(PC1 ~ logmass, data=flam.above)
+#summary(mass_axis1LM)
+
+
+#section biomass -- axis2
+#ggplot(flam.above, aes(logmass, PC2, color=sp.cd)) + geom_point() +
+  #geom_smooth(method="lm", se=FALSE) +
+  #labs(title=" Biomass influence on second flammability axis at flamming stage above 10cm\n",
+       #y="Flmmability axis2", x="Logged biomass of plant section above 10cm",
+       #color="species name\n") +
+  #scale_color_manual(labels=species, values= color) +
+  #theme(axis.text.x=element_blank())
+
+#mass_axis2LM <- lm(PC2 ~ logmass, data=flam.above)
+#summary(mass_axis2LM)
+
+
+#biomass density -- axis1
+
+ggplot(flam.above, aes(logden, PC1, color=sp.cd)) + geom_point() +
   geom_smooth(method="lm", se=FALSE) +
-  labs(title=" Biomass influence on first flammability axis at flamming 
-       stage(>10cm)\n",
-       y="Flmmability axis1", x="Logged biomass of plant section above 10cm",
-       color="species name\n") +
-  scale_color_manual(labels=species, values= color) +
-  theme(axis.text.x=element_blank())
-
-mass_axis1LM <- lm(comp1 ~ logmass, data=massflam.a)
-summary(mass_axis1LM)
-
-ggplot(massflam.a, aes(logmass, comp2, color=sp.cd)) + geom_point() +
-  geom_smooth(method="lm", se=FALSE) +
-  labs(title=" Biomass influence on second flammability axis at flamming 
-       stage(>10cm)\n",
-       y="Flmmability axis2", x="Logged biomass of plant section above 10cm",
-       color="species name\n") +
-  scale_color_manual(labels=species, values= color) +
-  theme(axis.text.x=element_blank())
-
-mass_axis2LM <- lm(comp2 ~ logmass, data=massflam.a)
-summary(mass_axis2LM)
-
-ggplot(massflam.a, aes(logden, comp1, color=sp.cd)) + geom_point() +
-  geom_smooth(method="lm", se=FALSE) +
-  labs(title=" Biomass density influence on first flammability axis at flamming 
-       stage(>10cm)\n",
+  labs(title=" Biomass density influence on first flammability axis at flamming stage above 10cm\n",
        y="Flmmability axis1", x="Logged biomass density of plant section above 10cm",
        color="species name\n") +
   scale_color_manual(labels=species, values= color) +
   theme(axis.text.x=element_blank())
 
-den_axis1LM <- lm(comp1 ~ logden, data=massflam.a)
+den_axis1LM <- lm(PC1 ~ logden, data=flam.above)
 summary(den_axis1LM)
 
-ggplot(massflam.a, aes(logden, comp2, color=sp.cd)) + geom_point() +
+#biomass density -- axis2
+
+ggplot(flam.above, aes(logden, PC2, color=sp.cd)) + geom_point() +
   geom_smooth(method="lm", se=FALSE) +
-  labs(title=" Biomass density influence on second flammability axis at flamming 
-       stage(>10cm)\n",
+  labs(title=" Biomass density influence on second flammability axis at flamming stage above 10cm\n",
        y="Flmmability axis2", x="Logged biomass density of plant section above 10cm",
        color="species name\n") +
   scale_color_manual(labels=species, values= color) +
   theme(axis.text.x=element_blank())
 
-den_axis2LM <- lm(comp2 ~ logden, data=massflam.a)
+den_axis2LM <- lm(PC2 ~ logden, data=flam.above)
 summary(den_axis2LM)
+
+#biomass ratio -- axis1
+ggplot(flam.above, aes(mratio, PC1, color=sp.cd)) + geom_point() +
+  geom_smooth(method="lm", se=FALSE) +
+  labs(title="Biomass ratio influence on first flammability axis at flaming stage above 10cm\n", y="f=Flammability axis1", x="Biomass ratio between twos sections",
+       color="species name\n") +
+  scale_color_manual(labels=species, values=color) +
+  theme(axis.text.x=element_blank())
+
+ratio_axis1LM <- lm(PC1 ~ mratio, data=flam.above)
+summary(ratio_axis1LM)
+
+#biomass ratio -- axis2
+ratio_axis2LM <- lm(PC2 ~ mratio, data=flam.above)
+summary(ratio_axis2LM)
+
+
 ```
 
-Total biomass has significant negative influence on first flammability axis(>10cm) but not on second axis; when look at how section biomass influences section flammability axis, I found that logged biomass(>10cm) has significant influence on both first and second flammability axis(>10cm). I haven't checked how total biomass or section biomass(<10cm) influence flammability 
-axes of below 10cm section.
 
-biomass density at above 10cm section does not have significant influence on either first or second flammability axis(>10cm), for which I did not use biomass adjusted flammability axes.
 
 ```{r influence_biomass_adjusted_flammability}
 adj_flamaxis1 <- residuals(mass_axis1LM)
 
-adj_denaxis1LM <- lm(adj_flamaxis1 ~ logden, data=massflam.a)
+adj_denaxis1LM <- lm(adj_flamaxis1 ~ logden, data=flam.above)
 summary(adj_denaxis1LM)
 
-adj_spaxis1LM <- lm(adj_flamaxis1 ~ sp.cd, data=massflam.a)
-summary(adj_spaxis1LM)
+adj_ratioaxis1LM <- lm(adj_flamaxis1 ~ mratio, data=flam.above)
+summary(adj_ratioaxis1LM)
+
 
 adj_flamaxis2 <- residuals(mass_axis2LM)
 
-adj_denaxis2LM <- lm(adj_flamaxis2 ~ logden, data=massflam.a)
+adj_denaxis2LM <- lm(adj_flamaxis2 ~ logden, data=flam.above)
 summary(adj_denaxis2LM)
 
-adj_spaxis2LM <- lm(adj_flamaxis2 ~ sp.cd, data=massflam.a)
-summary(adj_spaxis2LM)
+adj_ratioaxis2LM <- lm(adj_flamaxis2 ~ mratio, data=flam.above)
+summary(adj_ratioaxis2LM)
 
 ```
-
-So, biomass density doesn't have signifiacnt influence on biomass adjusted flammability axes. However, there is spcies variance existing in biomass adjusted flammability axis1(>10cm)
+so,at flaming stage above 10cm section, biomass ratio actually does have significant influence 
+on total biomass adjusted flammability axis 1, which is more related to heat release rate.but
+no significant influence on flammability axis 2 was found, which is more related to total heat release.
 
 #3b. Is total biomass's effect independent of other traits?
 
 ```{r interaction_effects}
-tmassp_axis1LM <- lm(comp1 ~ logtmass*sp.cd, data=massflam.a)
-summary(massp_axis1LM)
+tmassp_axis1LM <- lm(PC1 ~ logtmass*sp.cd, data=flam.above)
+summary(tmassp_axis1LM)
 
 tmassarc_axis1LM <- lm(comp1 ~ logtmass*logden, data=massflam.a)
 summary(massarc_axis1LM)
@@ -341,8 +357,14 @@ massarc_axis1LM <- lm(comp1 ~ logmass*logden, data=massflam.a)
 summary(massarc_axis1LM)
 
 ```
-There is significant interaction between biomass and species on flammability axis1, however, no interaction between biomass and biomass density. 
 
-As a conclusion, there are 2 flammability axes regarding my flammability measurements. Total biomass and section biomass density have significant variation across species. Total biomass has significant influences on first flammability axis at above 10cm plant section but not on second axis, but section biomass(>10cm) has significant influence on both first and second flammability axis(>10cm), I haven't checked section biomass(<10cm) influence on section flammability axes(<10cm) yet.  Biomass density of plant section at above 10cm doesn't have significant influence on flammability. 
+As a conclusion, there are 2 flammability axes in my flammability data. At flaming stage,
+the first flammability axis is more related to heat release rate, and the second axis is more related to total heat release. I don't know how to explain flammability axes at smoldering stage. 
 
-When look at total biomass adjusted flammability axes, I found significant species variation in first flammability axis(>10cm) but not in second one. No biomass desnity influence on biomass adjusted flammability. Also, there is significant interacion between total biomass and speceis, but no interacton between total biomass and biomass density. 
+Total biomass and section biomass density have significant variations across species. Total biomass has significant influences on first flammability axis at above 10cm plant section but not on second axis, but section biomass(>10cm) has significant influence on both first and second flammability axis(>10cm). I haven't found any significant influence of biomass density.
+
+But when I looked biomass ratio of two sections, it influences the first flammability axis at
+flaming stage(not too significant, p-value:0.019) but not on second one. And then I looked how biomass ratio influences total biomass adjusted flammability axes, and I found significant influence of biomass ratio on biomass adjusted first flammablity aixs but not on second one.
+
+So, plant structure seems have significant influence on heat release rate at flaming stage, I haven't looked at how it influence flammability axes at smoldering stage yet.
+
