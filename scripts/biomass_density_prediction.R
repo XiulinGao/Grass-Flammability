@@ -54,12 +54,14 @@ predictmass $ dia <- rowMeans(subset(predictmass, select = c(wda10.3, wda.1, wda
 arcmass <- predictmass %>% mutate(vol10 = pi*dia10^2 *10/4) %>%
   mutate(vol = pi*dia^2*h_above10/4) %>%
   mutate(density10 = 10^(logmass10)/vol10) %>% mutate(logden10 = log10(density10+1)) %>%
-  mutate(density = 10^(logmass)/vol)  %>% mutate(logden = log10(density +1)) 
+  mutate(density = 10^(logmass)/vol)  %>% mutate(logden = log10(density +1)) %>%
+  mutate(mratio = 10^(logmass)/10^(logmass10))
 #density is not normally distributed, log10(x+1) fixed it with avoiding negative value
 
 #clean up arcmass by dropping data that won't be used for later analysis
 mass.density <- arcmass[, c("label", "pair", "treatment", "sp.cd", "height", "h_above10", 
-                          "logmass10", "logmass", "density10", "logden10", "density","logden")]
+                          "logmass10", "logmass","mratio",
+                          "density10", "logden10", "density","logden")]
  
 
  
