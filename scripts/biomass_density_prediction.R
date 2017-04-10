@@ -6,6 +6,7 @@
 ###as a cylinder.
 
 library(dplyr)
+source("./clean_up_trial.R")
 
 raw.ca <- read.csv('../data/2016-canopy-fmc.csv', stringsAsFactors=FALSE, 
                    na.strings=c("N/A",""))
@@ -14,30 +15,30 @@ canopy <- raw.ca %>% filter(!sp.cd=="ARPU9") #throw away ARPU9,
 
 #un-burned 
 ucanopy <- filter(canopy, treatment == 'u') %>%
-  mutate(logmass10=log10(drym.10)) %>%
-  mutate(logmass=log10(dry.m)) %>%
-  mutate(logtiller=log10(tiller.num)) %>%  #log biomass and tiller number, fixed
-  mutate(h_above10 = height-10)
+  mutate(h.above10 = height-10) %>% mutate(total.mass=drym.10+dry.m)
  
 #burned    
 bcanopy <- filter(canopy, treatment == 'b') %>%
-  mutate(logtiller=log10(tiller.num)) %>%
-  mutate(h_above10=height-10)
+  mutate(h.above10=height-10) %>% left_join(trials)
+bcanopy <- bcanopy[, c(1:26, 42)]
 
 
 #use unburned plants canopy architecture dataset to predict biomass
-#for burned plants with using tiller number and height as factors.
-#height is only used for above 10cm plant secntion.
+#for burned plants with using tiller number, height, sp.cd and total 
+#biomass as prediction factor. 
 
 #0~10cm, use only tiller number
-mass10Mod <- lm(logmass10 ~ logtiller*sp.cd, data = ucanopy)
-predictmass <- bcanopy %>% mutate (logmass10 = predict(mass10Mod, newdata = bcanopy))
+
+mass10LM <- lm(drym.10 ~ tiller.num + total.mass*sp.cd, data = ucanopy)
+summary(mass10LM)
+predictmass <- bcanopy %>% mutate (mass10 = predict(mass10LM, newdata = bcanopy))
 
 #>10cm, use both tiller number and height
-massMod <- lm(logmass ~ logtiller*sp.cd + h_above10*sp.cd, data = ucanopy)
-predictmass <- predictmass %>% mutate(logmass = predict(massMod, newdata = bcanopy))
 
+massLM <- lm(dry.m ~ tiller.num + h.above10*sp.cd + total.mass*sp.cd, data = ucanopy)
+summary(massLM)
 
+predictmass <- predictmass %>% mutate(mass = predict(massLM, newdata = bcanopy))
 
 #then calculate biomass density for both sections, is mass density for whole plant 
 #needed?
@@ -52,16 +53,18 @@ predictmass $ dia <- rowMeans(subset(predictmass, select = c(wda10.3, wda.1, wda
                                                              wdb.2, wdb.3)), na.rm = TRUE)
 #calculate biomass density
 arcmass <- predictmass %>% mutate(vol10 = pi*dia10^2 *10/4) %>%
-  mutate(vol = pi*dia^2*h_above10/4) %>%
-  mutate(density10 = 10^(logmass10)/vol10) %>% mutate(logden10 = log10(density10+1)) %>%
-  mutate(density = 10^(logmass)/vol)  %>% mutate(logden = log10(density +1)) %>%
-  mutate(mratio = 10^(logmass)/10^(logmass10))
-#density is not normally distributed, log10(x+1) fixed it with avoiding negative value
+  mutate(vol = pi*dia^2*h.above10/4) %>%
+  mutate(density10 = mass10/vol10) %>%
+  mutate(density = mass/vol)  %>% 
+  mutate(mratio = mass/mass10) %>%
+  mutate(pred.tmass=mass+mass10)
+  
+
 
 #clean up arcmass by dropping data that won't be used for later analysis
-mass.density <- arcmass[, c("label", "pair", "treatment", "sp.cd", "height", "h_above10", 
-                          "logmass10", "logmass","mratio",
-                          "density10", "logden10", "density","logden")]
+mass.density <- arcmass[, c("label", "pair", "treatment", "sp.cd", "height", "h.above10", 
+                          "mass10", "mass","mratio","pred.tmass",
+                          "density10", "density")]
  
 
  
