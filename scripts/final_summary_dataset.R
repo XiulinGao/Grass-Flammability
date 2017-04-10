@@ -4,7 +4,6 @@
 ###summaries for peak temp., mass loss rate and biomass density for each trial
 
 library(dplyr)
-
 source("./hobo-temps.R") #grab peak temp summaries for each trial:temps.sum
 source("./burning_trial_summaries.R") #grab mass loss rate for each trial:
                                       #flamingModsCoef
@@ -24,7 +23,11 @@ fix.tempsec.sum <- tempsec.sum[, -which(names(tempsec.sum)=="interval")]
 flam.alldata <- left_join(fix.trials, fix.tempsec.sum) %>% 
   left_join(flamingModsCoef) %>% left_join(mass.density)
 
-flam.above <- flam.alldata %>% filter(location=="above.sec")
+flam.above <- flam.alldata %>% filter(location=="above.sec") %>%
+  mutate(log.tmass=log(total.mass))
+
+flam.below <- flam.alldata %>% filter(location=="below.sec") %>%
+  mutate(log.tmass=log(total.mass))
 
 smog.alldata <- left_join(fix.trials, fix.tempsec.sum) %>%
   left_join(smolderingModsCoef) %>% left_join(mass.density)
