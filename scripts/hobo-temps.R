@@ -82,7 +82,7 @@ thermocouples.long <- thermocouples.wide %>% gather(location, temperature, -time
 thermocouples.sec.long <- thermocouples.sec %>% gather(location, temperature, -time, -trial.id)
 
 ## then do the summary
-threshold=60 # temperature threshold in degrees C
+threshold=100 # temperature threshold in degrees C
 temps.sum <- thermocouples.long %>% group_by(trial.id, location) %>%
     summarise(dur = sum(temperature > threshold),
               degsec = sum(temperature[temperature > threshold]),
