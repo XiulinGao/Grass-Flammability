@@ -59,4 +59,5 @@ get_average_ignition <- function(ignition){
 
 trials$ignition <- get_average_ignition(trials$ignition)
 trials$logtmass <- log10(trials$total.mass)
+trials <- trials %>% mutate(mconsum = total.mass-fuel.residual)
 
