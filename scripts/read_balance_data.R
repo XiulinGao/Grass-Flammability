@@ -38,13 +38,15 @@ balance_data <- concat_csv_dir('../data/balance') %>%
   filter(!label=='ap01') #throw away ARPU9
 
 balance_data <- left_join(balance_data, trials) 
+#test <- balance_data %>% mutate(percent.loss = mass/balance.initial)
 
 balance_data <- balance_data %>%
   mutate(mass = mass * 0.001) %>% # mass to g
   group_by(label) %>% 
   mutate(
     is.flaming = nsec > 50+ignition & nsec < 50+ignition+combustion,
-    is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering )
+    is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering,
+    septime = 50+ignition+combustion)
          
 
 
@@ -52,10 +54,13 @@ balance_data <- balance_data %>%
 ID <- unique(balance_data$utrial)
 for (i in 1: length(unique(ID))) {  
   onelabel <- filter(balance_data, utrial==ID[i]) # subset
+  flamburn <- filter(onelabel, is.flaming) # only flaming stage
   pdf(file.path("../results", file=paste(ID[i], ".pdf", sep=""))) # plot in pdf
-  print(qplot(nsec, mass, data=onelabel, geom="line"))
+  print(qplot(nsec, mass , data=flamburn, geom="point") + 
+          geom_vline(xintercept = onelabel$septime[1]))
   dev.off()
 }
+
 
 ## ggplot(balance_data, aes(nsec, log(total.mass))) +
 ##   geom_line() + facet_wrap(~ utrial)
