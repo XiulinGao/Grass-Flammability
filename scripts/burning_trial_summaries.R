@@ -78,7 +78,8 @@ for (i in 1:length(decayID)) {
   mod_coef <- mod_coef[, c(6:8, 1:5)]
   flamingNLModsCoef<- rbind(flamingNLModsCoef, mod_coef)
 }
-
+flamlossr <- filter(flamingNLModsCoef, term=="b")
+colnames(flamlossr)[5] <- "lossrate"
 ##compare AIC for linear and non-linear mods
 laics <- sapply(flamingMods$flamingMod, AIC)
 plot(nlaics ~ laics)
