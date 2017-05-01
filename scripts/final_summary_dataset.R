@@ -21,13 +21,13 @@ fix.tempsec.sum <- tempsec.sum[, -which(names(tempsec.sum)=="interval")]
 #as contain both flaming and smoldering biomass loss rate, trial records
 #and canopy
 
-flam.alldata <- left_join(fix.trials, fix.tempsec.sum) %>% 
+temp.alldata <- left_join(fix.trials, fix.tempsec.sum) %>% 
   left_join(flamlossr) %>% left_join(mass.density)
 
-flam.above <- flam.alldata %>% filter(location=="above.sec") %>%
+temp.above <- temp.alldata %>% filter(location=="above.sec") %>%
   mutate(log.tmass=log(total.mass))
 
-flam.below <- flam.alldata %>% filter(location=="below.sec") %>%
+temp.below <- temp.alldata %>% filter(location=="below.sec") %>%
   mutate(log.tmass=log(total.mass))
 
 #smog.alldata <- left_join(fix.trials, fix.tempsec.sum) %>%
