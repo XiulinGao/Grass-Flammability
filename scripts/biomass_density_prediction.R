@@ -54,17 +54,20 @@ predictmass $ dia <- rowMeans(subset(predictmass, select = c(wda10.3, wda.1, wda
 #calculate biomass density
 arcmass <- predictmass %>% mutate(vol10 = pi*dia10^2 *10/4) %>%
   mutate(vol = pi*dia^2*h.above10/4) %>%
+  mutate(tvol = 1/3*pi*height*(dia*dia+dia10*dia10+dia10*dia)) %>%
   mutate(density10 = mass10/vol10) %>%
   mutate(density = mass/vol)  %>% 
   mutate(mratio = mass/mass10) %>%
-  mutate(pred.tmass=mass+mass10)
+  mutate(tdensity = total.mass/tvol)
+  
+  
   
 
 
 #clean up arcmass by dropping data that won't be used for later analysis
 mass.density <- arcmass[, c("label", "pair", "treatment", "sp.cd", "height", "h.above10", 
-                          "mass10", "mass","mratio","pred.tmass",
-                          "density10", "density")]
+                          "mass10", "mass","mratio",
+                          "density10", "density", "tdensity")]
  
 
  
