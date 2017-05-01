@@ -19,9 +19,8 @@ color <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442",
 ## 1. PCA for flammability measurements
 
 flamabove.PCA <- temp.above %>%
-  subset(select = c("dur", "lossrate", "massloss", "degsec",
-                    "max.fh" )) %>% pca(nPcs=4, method="ppca",
-                                        center=TRUE,scale="uv")
+  select(dur, lossrate, massloss, degsec, max.fh) %>%
+  pca(nPcs=4, method="ppca", center=TRUE, scale="uv")
 
 flamabove.loads <- as.data.frame(loadings(flamabove.PCA))
 flamabove.scores <- as.data.frame(scores(flamabove.PCA)) %>% 
