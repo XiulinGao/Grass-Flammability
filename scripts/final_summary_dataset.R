@@ -13,9 +13,9 @@ source("./biomass_density_prediction.R")# architecture data
 #does not work when join trials with other dataset(can't open file),
 #it is not necessary to keep it 
 
-trials <- trials[, -which(names(trials)=="interval")]
-trials.orga <- trials[order(trials$label), 1:27]
-tempsec.sum <- tempsec.sum[, -which(names(tempsec.sum)=="interval")]
+trials <- select(trials, -interval)
+trials.orga <- trials[order(fix.trials$label), ]
+tempsec.sum <- select(tempsec.sum, -interval)
 
 #1. data frame has temp summary for above ane below section, as well
 #as contain both flaming and smoldering biomass loss rate, trial records
