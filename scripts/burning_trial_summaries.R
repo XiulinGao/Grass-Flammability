@@ -3,7 +3,7 @@
 
 library(broom)
 library(lme4)
-library(brms) # Bayesian model fititng via stan and rstan
+#library(brms) # Bayesian model fititng via stan and rstan
 library(dplyr)
 
 source("./read_balance_data.R")
@@ -86,6 +86,9 @@ flamlossr <- flamlossr %>% mutate(lossrate=abs(lossrate))
 laics <- sapply(flamingMods$flamingMod, AIC)
 plot(nlaics ~ laics)
 
+#clean up env
+
+rm("massmatch", "subdecay", "mod_coef", "decayID", "i")
 
 ## plot fitted value from both linear and non-linear fit to see how they 
 ## match the original data

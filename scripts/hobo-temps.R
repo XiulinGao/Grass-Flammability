@@ -14,7 +14,7 @@ read_hobo_file <- function(filename) {
         # we use floor_date() below to round to seconds so we can line up our
         # measurements across HOBOs
         mutate(time = floor_date(mdy_hms(time, tz=TZ), "second"))
-    return(hobo)
+    return(hobo) #change timezone
 }
 
 
@@ -53,8 +53,9 @@ thermocouples.wide$below.sec <- rowMeans(subset(thermocouples.wide, select=c(bas
 thermocouples.wide$above.sec <- rowMeans(subset(thermocouples.wide, select=c(height.20,
                                     height.40)), na.rm=TRUE)
 
-thermocouples.wide <- thermocouples.wide %>% mutate_each(funs(round(.,2)), 
-                                                         below.sec, above.sec)
+thermocouples.wide <- thermocouples.wide %>% mutate_at(c("below.sec", 
+                                                         "above.sec"),funs(round(.,2)))
+                                                         
 thermocouples.sec <- thermocouples.wide[, -c(2:7)]
 thermocouples.wide <- thermocouples.wide[, -c(2:3)]#get rid off base.A, base.B
                       
@@ -82,7 +83,7 @@ thermocouples.long <- thermocouples.wide %>% gather(location, temperature, -time
 thermocouples.sec.long <- thermocouples.sec %>% gather(location, temperature, -time, -trial.id)
 
 ## then do the summary
-threshold=100 # temperature threshold in degrees C
+threshold=60 # temperature threshold in degrees C
 temps.sum <- thermocouples.long %>% group_by(trial.id, location) %>%
     summarise(dur = sum(temperature > threshold),
               degsec = sum(temperature[temperature > threshold]),
@@ -98,7 +99,10 @@ tempsec.sum <- thermocouples.sec.long %>% group_by(trial.id, location) %>%
             peak.time = time[which(peak.temp == temperature)[1]],
             num.NA = sum(is.na(temperature))) %>%
   full_join(trials) 
-
-
+#clean up env
+rm("concat_hobo_files", "get_trial_id", "read_hobo_file", "threshold",
+   "thermocouples.wide", "thermocouples.sec", "thermocouples.long",
+   "thermocouples.sec.long", "height10", "height20", "height40", 
+   "basea", "baseb")
   
   

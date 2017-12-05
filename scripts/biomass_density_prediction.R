@@ -58,7 +58,8 @@ arcmass <- predictmass %>% mutate(vol10 = pi*dia10^2 *10/4) %>%
   mutate(density10 = mass10/vol10) %>%
   mutate(density = mass/vol)  %>% 
   mutate(mratio = mass/mass10) %>%
-  mutate(tdensity = total.mass/tvol)
+  mutate(tdensity = total.mass/tvol) %>%
+  mutate(ptmass = mass10 + mass)
   
   
   
@@ -68,7 +69,9 @@ arcmass <- predictmass %>% mutate(vol10 = pi*dia10^2 *10/4) %>%
 mass.density <- arcmass[, c("label", "pair", "treatment", "sp.cd", "height", "h.above10", 
                           "mass10", "mass","mratio",
                           "density10", "density", "tdensity")]
- 
+#clean up env
+rm("arcmass", "bcanopy", "canopy", "mass10LM", "massLM", "predictmass",
+   "raw.ca", "ucanopy")
 
  
  

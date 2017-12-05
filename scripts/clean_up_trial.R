@@ -7,8 +7,10 @@
 library(dplyr)
 library(lubridate)
 library(stringr)
-
-TZ = "CST6CDT"
+Sys.setenv(TZ = "America/Chicago") #set sys tz can fix timezone warning
+TZ = "CST6CDT" #timezone does not work with getting error"
+#In as.POSIXlt.POSIXct(x, tz) :
+#unknown timezone 'zone/tz/2017c.1.0/zoneinfo/America/Chicago'
 
 trials <- read.csv("../data/2016-burns.csv", stringsAsFactors=FALSE,
                    na.strings = c("", "N/A")) 
@@ -16,9 +18,11 @@ trials <- trials %>% mutate(temp = (temp-32)*5/9) %>%
   filter(!sp.cd=="ARPU9") %>%
   mutate(total.mass = initial.mass-final.mass) %>%
   mutate(start.time = mdy_hm(str_c(trial.date, " ",
-                                   start.t), tz=TZ)) %>%
+                                   start.t),tz=TZ)) %>%
   mutate(end.time = mdy_hm(str_c(trial.date, " ", end.t), tz=TZ),
-         trial.id = paste(trial.date, trial.num, sep="_"))
+         trial.id = paste(trial.date, trial.num, sep="_")) #delete code specifying 
+                                                           #timezone, use default
+
 
 #drop duplicated trial, always the first one failed
 #find the duplicated trial id
@@ -61,4 +65,5 @@ trials$ignition <- get_average_ignition(trials$ignition)
 trials$logtmass <- log10(trials$total.mass)
 trials <- trials %>% mutate(mconsum = total.mass-fuel.residual) %>%
   mutate(massloss = mconsum/total.mass)
-
+#clean up env
+rm("dropid", "n1", "n2", "get_average_ignition", "get_double_digit")

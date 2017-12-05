@@ -61,6 +61,8 @@ for (i in 1: length(unique(ID))) {
   dev.off()
 }
 
+#clean up env
+rm("i", "ID", "concat_csv_dir", "read_balance_file", "onelabel")
 
 ## ggplot(balance_data, aes(nsec, log(total.mass))) +
 ##   geom_line() + facet_wrap(~ utrial)
