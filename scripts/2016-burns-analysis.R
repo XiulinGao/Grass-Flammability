@@ -1,41 +1,73 @@
 ###2016-burns-analysis.R
 
 library(pcaMethods)
-library(car)
 library(lme4)
+library(AICcmodavg)
 
 ## data loading and plot theme set up
 
 source("./final_summary_dataset.R")
 source("./ggplot-theme.R") # duplicate from Schwilk, made minor edit to font size
 
-species <- c("Agropyron smithii", "Aristida purpurea", "Bromus inermis",
+species <- c( "Pascopyrum smithii", "Aristida purpurea", "Bromus inermis",
              "Chasmanthium latifolium", "Elymus longifolius", "Eragrostis curvula",
-             "Panicum anceps", "Stipa neomexicana")
+             "Panicum anceps",  "Hesperostipa neomexicana")
 
 color <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
            "#0072B2", "#D55E00", "#CC79A7")
 
 ## 1. PCA for flammability measurements
 
+#apply pca to selected flammability measurements
 flamabove.PCA <- temp.above %>%
-  subset(select = c("dur", "lossrate", "massloss", "degsec",
-                    "max.fh" )) %>% pca(nPcs=4, method="ppca",
-                                        center=TRUE,scale="uv")
-
+  select ( dur, lossrate, massloss,
+           max.fh) %>% pca(nPcs=3, method="ppca",
+                           center=TRUE,scale="uv")
+#extract pca loading and score for biplot
 flamabove.loads <- as.data.frame(loadings(flamabove.PCA))
-flamabove.scores <- as.data.frame(scores(flamabove.PCA)) %>% 
-  subset(select=c("PC1","PC2"))
-summary(flamabove.PCA) # first two axes explained 80% of total variance
+flamabove.scores <- as.data.frame(scores(flamabove.PCA))
+#extract grouping label for pca scores and variable names for loading 
+flamabove.scores$sp.cd <- temp.above$sp.cd
+varnames1 <- c("mass loss rate", "mass loss","max. flame height")
+varnames2 <- c("duration of heating")
+            
+#adjust relative length of loading segments on biplot 
+mult <- min(
+  (max(flamabove.scores$PC2) - min(flamabove.scores$PC2)/(max(flamabove.loads$PC2)-min(flamabove.loads$PC2))),
+  (max(flamabove.scores$PC1) - min(flamabove.scores$PC1)/(max(flamabove.loads$PC1)-min(flamabove.loads$PC1)))
+)
 
-biplot(flamabove.PCA, xlab = "Principle component 1",
-       ylab = "Principle component 2") 
+flamabove.loads <- transform(flamabove.loads,
+                             v1 = 0.6 * mult * PC1,
+                             v2 = 0.6 * mult * PC2
+)
+
+#final biplot 
+
+flamabove.loads1 <- flamabove.loads[c(2:4),]
+flamabove.loads2 <- flamabove.loads[1,]
+                                  
+
+ggplot()+
+  geom_point(data = flamabove.scores, aes(x=PC1, y=PC2, color=sp.cd, alpha=0.001)) +
+  scale_color_manual(values=color)+
+  labs(x="Principle component 1 (58.5%)", y="Principle component 2 (20.5%)") + 
+  geom_segment(data = flamabove.loads, aes(x=0,y=0,xend=v1,yend=v2),
+               arrow=arrow(length=unit(0.2,"cm")), alpha=0.75, color = "black")+
+  geom_text(data = flamabove.loads1, aes(x=v1, y=v2, label=varnames1),
+            size = 5, vjust=0, color="black") + pubtheme.nogridlines +
+  theme(legend.position = "none", axis.text=element_text(size=18),
+        axis.title=element_text(size=20)) + 
+  geom_text(data = flamabove.loads2, aes(x=v1, y=v2-0.4, label=varnames2),
+            size = 5, vjust=0, color="black")
+
 
 ## 2. total biomass and biomass ratio influence on duration of heating 
 
-ggplot(temp.above, aes(total.mass, dur)) + geom_point() +
+ggplot(temp.above, aes(total.mass, dur, color=sp.cd)) + geom_point(size=0.5) +
   bestfit + 
-  labs( y="Duration of heating above 10cm (s)", x="Total above-ground biomass (g)") + 
+  labs( y="Duration of heating >10cm (s)", x="Total above ground biomass (g)",
+        color="\n") + scale_color_manual(label=species, values=color) +
   scale_x_continuous(limits=c(0.001, 360), expand=c(0,0)) + 
   scale_y_continuous(limits=c(0, 800), expand=c(0,0)) + pubtheme.nogridlines 
 
@@ -53,25 +85,67 @@ ggplot(temp.above, aes(mratio, adj_dura, color=sp.cd)) +
   scale_color_manual(label=species, values=color) + 
   bestfit  +
   geom_point(data=duramean, size=2.0, alpha=1) + 
-  scale_y_continuous(limits = c(-200, 200)) +
-  labs( y="Biomass corrected duration above 10cm (s)", 
+  scale_y_continuous(limits = c(-200, 160)) +
+  labs( y="Biomass corrected duration >10cm(s)", 
         x="Biomass ratio", color="\n") + pubtheme.nogridlines
+
+
 
 ratio_duraLMM <- lmer(adj_dura ~ mratio + (mratio|sp.cd), 
                       data=temp.above, REML=FALSE)
+den_duraLMM <- lmer(adj_dura ~ tdensity + (tdensity|sp.cd),
+                    data=temp.above, REML=FALSE)
 summary(ratio_duraLMM)
+summary(den_duraLMM)
 duraNull <- lmer(adj_dura ~ 1 + (mratio|sp.cd), data=temp.above, REML=F)
 anova(ratio_duraLMM, duraNull)# sig. biomass ratio influence on duration 
                               # of heating at >10cm location, also looked for 
                               # density, however, no sig. effect
 
+# approach 2 : variable selection
+
+# rescale numeric variables
+
+zscore <- function(x) (x - mean(x)) / sd(x)  
+
+resca_dura <- temp.above %>% mutate_at(c("total.mass", "tdensity", "mratio"),
+                                       funs(s = zscore(.)))
+duraFullMod <- lmer (dur ~ total.mass_s* mratio_s*tdensity_s +
+                       (1 + total.mass_s + mratio_s + tdensity_s|sp.cd),
+                     data=resca_dura, REML=FALSE)
+mod1 <- lmer(adj_dura ~ mratio_s*tdensity_s +
+               (1 + mratio_s + tdensity_s|sp.cd), data=resca_dura, REML=FALSE)
+summary(mod1)
+summary(duraFullMod) # seems total biomass (+), mratio (-) does have sig.
+                     # influence on duration of heating based on the T value
+
+tmassNull <- lmer(dur ~ mratio_s +
+                    (1 + total.mass_s + mratio_s|sp.cd),
+                  data=resca_dura, REML=FALSE)
+mratioNull <- lmer(dur ~ total.mass_s + 
+                      (1 + total.mass_s + mratio_s|sp.cd),
+                    data=resca_dura, REML=FALSE)
+
+
+# grab aic for each model with AICcmodavg::aictab
+
+aictab(list(duraFullMod, tmassNull, mratioNull))
+# full mode with both total mass and mass ratio as
+# predictors is the best model. Do anova to see if 
+# both have sig. effect on duration of heating
+
+anova(duraFullMod, tmassNull) #total biomass has sig. effect
+anova(duraFullMod, mratioNull) # mass ratio has sig. (p<0.05) effect
+
+
 ##3. total biomass and biomass ratio influence on duration of heating <10cm
 
-ggplot(temp.below, aes(total.mass, dur)) + geom_point() +
+ggplot(temp.below, aes(total.mass, dur, color=sp.cd)) + geom_point(size=0.5) +
   bestfit + 
-  labs( y="Duration of heating below 10cm (s)", x="Total above-ground biomass (g)") + 
+  labs( y="Duration of heating below 10cm (s)", x="Total above ground biomass (g)",
+        color="\n") + scale_color_manual(label=species, values=color) +
   scale_x_continuous(limits=c(0.001, 360), expand=c(0,0)) + 
-  scale_y_continuous(limits=c(0, 1500),expand=c(0,0)) + pubtheme.nogridlines 
+  scale_y_continuous(limits=c(0, 1200),expand=c(0,0)) + pubtheme.nogridlines 
 
 tm_durbLMod <- lm(dur ~ total.mass, data=temp.below)
 summary(tm_durbLMod) #sig. biomass effec
@@ -88,7 +162,7 @@ ggplot(temp.below, aes(mratio, adj_durb, color=sp.cd)) +
   bestfit  +
   geom_point(data=durbmean, size=2.0, alpha=1) + 
   scale_y_continuous(limits = c(-600, 600)) +
-  labs( y="Biomass corrected duration above 10cm (s)", 
+  labs( y="Biomass corrected duration <10cm (s)", 
         x="Biomass ratio", color="\n") + pubtheme.nogridlines
 
 ratio_durbLMM <- lmer(adj_durb ~ mratio + (mratio|sp.cd), 
@@ -98,77 +172,187 @@ durbNull <- lmer(adj_durb ~ 1 + (mratio|sp.cd), data=temp.below, REML=F)
 anova(ratio_durbLMM, durbNull) # sig. mass ratio influence on duration
                                # of heating below 10cm, no density10 influence
 
+# approach 2
+resca_durb <- temp.below %>% mutate_at(c("total.mass", "tdensity", "mratio"),
+                                       funs(s = zscore(.)))
+durbFullMod <- lmer (dur ~ total.mass_s + tdensity_s +
+                       (1 + total.mass_s|sp.cd),
+                     data=resca_durb, REML=FALSE)  
+# I tried use biomass, mass ratio and density as predictors and found density 
+# actually has more sig. influence on duration of heating below 10cm, so I switched
+# to density here
+
+summary(durbFullMod) # seems total biomass (+), density (+) does have sig.
+                     # influence on duration of heating based on the T value
+
+durb_tmassNull <- lmer(dur ~ tdensity_s +
+                    (1 + total.mass_s|sp.cd),
+                  data=resca_durb, REML=FALSE)
+durb_densityNull <- lmer(dur ~ total.mass_s + 
+                           (1 + total.mass_s|sp.cd),
+                         data=resca_durb, REML=FALSE)
+
+# grab aic for each model with AICcmodavg::aictab
+
+aictab(list(durbFullMod, durb_tmassNull, durb_densityNull))
+# full mode with both total mass and density as
+# predictors is the best model. Do anova to see if 
+# both have sig. effect on duration of heating
+
+anova(durbFullMod, durb_tmassNull) #total biomass has sig. effect(+)
+anova(durbFullMod, durb_densityNull) # density has sig. effect(+)
+
+# so, it looks like that plants hold more biomass off ground tend to 
+# produce less heat above 10cm, this may be explained by more biomass
+# tend to fall for those plants; meanwhile, plants with more dense mass
+# tend to produce more heat below 10cm? is this related to heat release 
+# rate? plant burn fast (more dense plant tend to burn slow) will produce 
+# less heat at  near ground location?
+
 ##4. total biomass and biomass density influence on maximum loss rate
 
-ggplot(data=flam.loss, aes(tdensity, lossrate, color=sp.cd)) + geom_point()+
-  geom_smooth(method="lm", se=F) +
+#ggplot(data=flam.loss, aes(tdensity, lossrate, color=sp.cd)) + geom_point()+
+  #geom_smooth(method="lm", se=F) +
+  #labs(y= expression("Biomass loss rate" ~ (s^{-1})), 
+       #x=expression("Density" ~ (g/cm^{-3})), 
+       #color="\n") + scale_color_manual(labels=species, values=color)+
+  #scale_y_continuous(expand = c(0,0), limits=c(0.01, 0.15)) +
+  #scale_x_continuous(expand = c(0,0))+ pubtheme.nogridlines # neither density nor total
+                                                            #alone can explain loss rate
+
+  ggplot(data=flam.loss, aes(total.mass, lossrate, color=sp.cd)) + geom_point(size=0.5)+
+    bestfit+
   labs(y= expression("Biomass loss rate" ~ (s^{-1})), 
-       x=expression("Density" ~ (g/cm^{-3})), 
-       color="\n") + scale_color_manual(labels=species, values=color)+
+       x="Total above ground biomass (g)",color="\n") + 
+  scale_color_manual(labels=species, values=color)+
   scale_y_continuous(expand = c(0,0), limits=c(0.01, 0.15)) +
-  scale_x_continuous(expand = c(0,0))+ pubtheme.nogridlines # neither density nor total
-# biomass alone can explain loss rate
+  scale_x_continuous(expand = c(0,0), limits=c(0.001, 220))+ 
+  pubtheme.nogridlines
 
-lossrFuLMM <- lmer(lossrate ~ tdensity + total.mass +
-                       (total.mass|sp.cd) + (tdensity|sp.cd), 
-                     data=flam.loss, REML=FALSE) #getting warning
+#mlossrNLMod <- nls(lossrate ~ a*total.mass/ (total.mass+b), 
+                   #data=flam.loss, start=list(a=0.1, b=0)) 
+#summary(mlossrNLMod)
+#mlossr.predict <- predict(mlossrNLMod, newdata=flam.loss)
+#p + geom_line(aes(total.mass, mlossr.predict), size=1.5, color="black")
 
-summary(lossrFuLMM)
+# approach 1
 
-denNull <- lmer(lossrate ~ total.mass + (total.mass|sp.cd)+
-                  (tdensity|sp.cd),
-                data=flam.loss, REML=FALSE)
-anova(lossrFuLMM, denNull) # density has sig. negative influence on loss rate
+tmlossrLM <- lm(lossrate ~ total.mass, data=flam.loss)
+adj_lossr <- as.data.frame(residuals(tmlossrLM))
+colnames(adj_lossr) <- "adj_lossr"
+flam.loss <- cbind(flam.loss, adj_lossr)
 
-tmassNull <- lmer(lossrate ~ tdensity + (tdensity|sp.cd) + (total.mass|sp.cd),
-                   data=flam.loss, REML=FALSE) #getting warning
+#group mean
+lossrgm <- flam.loss %>% group_by(sp.cd) %>% summarise(tdensity=mean(tdensity),
+                                                          adj_lossr=mean(adj_lossr))
 
-anova(lossrFuLMM, tmassNull) # total biomass has no influence on loss rate
+ggplot(data=flam.loss, aes(tdensity, adj_lossr, color=sp.cd)) + geom_point(size=0.5, 
+                                                                            alpha=0.4)+
+  bestfit + 
+  labs(y= expression("Biomass corrected loss rate" ~ (s^{-1})), 
+       x=expression("Biomass density" ~ (g/cm^{-3})), color="\n") + 
+  scale_y_continuous(limits=c(-0.05, 0.10))+
+  scale_color_manual(labels=species, values=color) +
+  geom_point(data=lossrgm, size=2.0, alpha=1) + pubtheme.nogridlines
+
+den_lossrLMM <- lmer(adj_lossr ~ tdensity * mratio + (mratio+tdensity|sp.cd), 
+                      data=flam.loss, REML=FALSE)
+summary(den_lossrLMM)
+lossrNull <- lmer(adj_lossr ~ 1 + (tdensity|sp.cd), data=flam.loss, REML=FALSE)
+anova(den_lossrLMM, lossrNull)
+
+# apporach 2
+
+resca_lossr <- flam.loss %>% mutate_each(funs(s = zscore(.)), total.mass, 
+                                          tdensity, mratio)
+lossrdenFull <- lmer(lossrate ~ tdensity_s  +
+                      (1 + tdensity_s|sp.cd), 
+                     data=resca_lossr, REML=FALSE) 
+
+summary(lossrdenFull) # seems density has sig. influence (-) on loss rate
+
+lossrdenNull <- lmer(lossrate ~ 1 +
+                            (1 + tdensity_s|sp.cd),
+                            data=resca_lossr, REML=FALSE)
+anova(lossrdenFull, lossrdenNull) # density has sig. negative influence on loss rate
+
+
+lossrmassFull <- lmer(lossrate ~ total.mass_s  +
+                        (1 + total.mass_s|sp.cd), 
+                      data=resca_lossr, REML=FALSE) 
+summary(lossrmassFull)
+lossrmassNull <- lmer(lossrate ~ 1  +
+                        (1 + total.mass_s|sp.cd), 
+                      data=resca_lossr, REML=FALSE) 
+anova(lossrmassFull, lossrmassNull) # total biomass also has sig. negative 
+                                    # effect on loss rate. I looked how
+                                    # total biomss is correlated with density
+                                    # i will say at least for 4 species, there 
+                                    # is positive relation between total biomass
+                                    # and biomass density
 
 ##5. total biomass and biomass density influence on max flame height
 
-ggplot(data=arc.trial, aes(total.mass, max.fh, color=sp.cd)) + geom_point()+
-  geom_smooth(method="lm", se=F) +
+p <- ggplot(data=arc.trial, aes(total.mass, max.fh, color=sp.cd)) + geom_point(size=0.5)+
   labs(y= "Maximum flame height (cm)", 
-       x= "Total above groud biomass (g)", 
-       color="\n") + scale_color_manual(labels=species, values=color)+
+       x= "Total above ground biomass (g)", color="\n") + 
+  scale_color_manual(labels=species, values=color)+
   scale_y_continuous(expand = c(0,0)) +
   scale_x_continuous(expand = c(0,0))+ pubtheme.nogridlines 
 
- maxfhFuLMM <- lmer( max.fh ~ total.mass + tdensity + (total.mass|sp.cd) +
-                       (tdensity|sp.cd), data=arc.trial, REML=FALSE)
-summary(maxfhFuLMM)
+maxfhNLMod <- nls(max.fh ~ a*total.mass/ (total.mass+b), data=arc.trial, 
+                  start=list(a=100, b=5)) 
+summary(maxfhNLMod)
+maxfh.predict <- predict(maxfhNLMod, newdata=arc.trial)
+p + geom_line(aes(total.mass, maxfh.predict), size=1.5, color="black") 
 
-fhtmassNull <- lmer(max.fh ~ tdensity + (total.mass|sp.cd) +
-                      (tdensity|sp.cd), data=arc.trial, REML=FALSE)
-anova(maxfhFuLMM, fhtmassNull) #total mass has significant positive 
-                               #influence on max. flame height
-fhdenNull <- lmer(max.fh ~ total.mass + (total.mass|sp.cd) +
-                    (tdensity|sp.cd), data=arc.trial, REML=FALSE)
-anova(maxfhFuLMM, fhdenNull) #density has sig. (p<0.05) negative
-                             # influence on max. flame height
+# rescale variables
+
+resca_maxfh <- arc.trial %>% mutate_each(funs(s = zscore(.)), total.mass, 
+                                         tdensity, mratio)
+ maxfhmassFull <- lmer( max.fh ~ total.mass_s +
+                         (1 + total.mass_s |sp.cd),
+                       data=resca_maxfh, REML=FALSE)
+summary(maxfhmassFull) # seems total mass has sig. effect(+)
+
+maxfhmassNull <- lmer(max.fh ~ 1 + (total.mass_s|sp.cd),
+                       data=resca_maxfh, REML=FALSE)
+anova(maxfhmassFull, maxfhmassNull) #total mass has significant positive 
+                                    #influence on max. flame height
+
+maxfhdenFull <- lmer(max.fh ~ tdensity_s + (1 + tdensity_s|sp.cd),
+                    data=resca_maxfh, REML=FALSE)
+maxfhdenNull <- lmer(max.fh ~ 1 + (1 + tdensity_s|sp.cd),
+                     data=resca_maxfh, REML=FALSE)
+anova(maxfhdenFull, maxfhdenNull) # density has no sig.
+                                  # influence on max. flame height
 
 ##6. total biomass and biomass ratio influence on mass loss
 
-ggplot(data=arc.trial, aes(total.mass, mconsum)) + geom_point()+
+#cairo_pdf("example.pdf", family="Arial", width=6, height=6)
+
+ggplot(data=arc.trial, aes(total.mass, mconsum, color=sp.cd)) + 
+  geom_point(size=0.5)+
   bestfit +
-  labs(y= "Mass loss (g)", x="Total above ground biomass (g)", 
+  labs(y= "Biomass consumption (g)", x="Total above ground biomass (g)", 
        color="\n") + scale_color_manual(labels=species, values=color)+
-  scale_y_continuous(expand = c(0,0)) +
-  scale_x_continuous(expand = c(0,0))+ pubtheme.nogridlines
-                             
+  scale_y_continuous(expand = c(0,0), limits=c(0,200)) +
+  scale_x_continuous(expand = c(0,0), limits=c(0,200))+ pubtheme.nogridlines 
+
+
+
 tmlossLM <- lm(mconsum ~ total.mass, data=arc.trial)
 summary(tmlossLM)
-
 arc.trial$adj_mloss <- residuals(tmlossLM)
 
 #group mean
 mlossgm <- arc.trial %>% group_by(sp.cd) %>%
   summarise(mratio=mean(mratio), adj_mloss=mean(adj_mloss))
+
   
 ggplot(data=arc.trial, aes(mratio, adj_mloss, color=sp.cd)) + 
   geom_point(size=0.5, alpha=0.4)+ bestfit + 
-  labs(y= "Biomass corrected mass loss (g)",
+  labs(y= "Biomass corrected mass consumption(g)",
        x="Biomass ratio",color="\n") + 
   scale_color_manual(labels=species, values=color) + 
   geom_point(data=mlossgm, size=2.0, alpha=1.0) + 
@@ -182,3 +366,14 @@ summary(ratio_mlossLMM)
 ratiolossNull <- lmer(adj_mloss ~ 1+(mratio|sp.cd), 
                       data=arc.trial, REML=FALSE)
 anova(ratio_mlossLMM, ratiolossNull) #sig. negative influence 
+
+# approach 2
+
+resca_mloss <- arc.trial %>% mutate_each(funs(s = zscore(.)), total.mass, 
+                                         tdensity, mratio)
+
+mlossFull <- lmer(mconsum ~ total.mass_s * tdensity_s*mratio_s+
+                    (1 + total.mass_s + tdensity_s + mratio_s|sp.cd),
+                  data=resca_mloss, REML=FALSE)
+summary(mlossFull) # seems mratio (-) and total mass(+) has sig. effects
+
