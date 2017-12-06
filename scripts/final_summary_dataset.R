@@ -14,7 +14,7 @@ source("./biomass_density_prediction.R")# architecture data
 #it is not necessary to keep it 
 
 trials <- select(trials, -interval)
-trials.orga <- trials[order(fix.trials$label), ]
+trials.orga <- trials[order(trials$label), ]
 tempsec.sum <- select(tempsec.sum, -interval)
 
 #1. data frame has temp summary for above ane below section, as well
