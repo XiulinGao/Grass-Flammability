@@ -50,5 +50,6 @@ ggplot()+
         axis.title=element_text(size=20)) + 
   geom_text(data = flamabove.loads2, aes(x=v1, y=v2-0.4, label=varnames2),
             size = 5, vjust=0, color="black")
-#clean up env
-rm("flamabove.loads")
+
+
+
