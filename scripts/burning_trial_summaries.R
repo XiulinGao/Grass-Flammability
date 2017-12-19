@@ -14,7 +14,7 @@ balance_sum <- balance_data %>% group_by(label, trial, utrial, sp.cd) %>%
   summarize(balance.initial = mean(mass[nsec<40]),
             balance.final = mean(mass[nsec > (max(nsec) - 10)]),
             balance.burned = balance.initial - balance.final) %>%
-  left_join(trials) 
+            left_join(trials) %>% select(-interval)
 
 # plot to see how calculated biomass loss match to measured biomass loss during 
 # each burning trial
@@ -28,12 +28,12 @@ ggplot(massmatch, aes(mconsum, balance.burned)) + geom_point() + geom_abline(slo
 
 ##########################################################################
 ## Temporary approach 1: separate models per trial
-bytrial <- balance_data %>% group_by(label, sp.cd, utrial)
+bytrial <- balance_data %>% group_by(label, sp.cd, sp.name, utrial)
 
 flambytrial <- bytrial %>% filter(is.flaming) %>%
   mutate(decaymass=mass-min(mass))
 
-flamingMods <- flambytrial %>% group_by(label, sp.cd, utrial) %>%
+flamingMods <- flambytrial %>% group_by(label, sp.cd, sp.name, utrial) %>%
   do(flamingMod = lm(mass ~ nsec, data = .)) 
 
 #smolderingMods <- bytrial %>% filter(is.smoldering) %>%
@@ -63,6 +63,7 @@ nlaics <- numeric(length(decayID))
 
 flamingNLModsCoef <- data.frame(label=character(),
                           sp.cd=character(),
+                          sp.name=character(),
                           utrial=character())
 
 for (i in 1:length(decayID)) {
@@ -74,6 +75,7 @@ for (i in 1:length(decayID)) {
   mod_coef <- tidy(flamingNLMod) #get model coef as data frame
   mod_coef$label <- subdecay$label[1]
   mod_coef$sp.cd <- subdecay$sp.cd[1]
+  mod_coef$sp.name <- subdecay$sp.name[1]
   mod_coef$utrial <- decayID[i]
   mod_coef <- mod_coef[, c(6:8, 1:5)]
   flamingNLModsCoef<- rbind(flamingNLModsCoef, mod_coef)
