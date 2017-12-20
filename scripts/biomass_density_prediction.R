@@ -20,7 +20,7 @@ ucanopy <- filter(canopy, treatment == 'u') %>%
 #burned    
 bcanopy <- filter(canopy, treatment == 'b') %>%
   mutate(h.above10=height-10) %>% left_join(trials)
-bcanopy <- bcanopy[, c(1:26, 42)]
+bcanopy <- bcanopy[, c(1:27, 43)]
 
 
 #use unburned plants canopy architecture dataset to predict biomass
@@ -66,9 +66,9 @@ arcmass <- predictmass %>% mutate(vol10 = pi*dia10^2 *10/4) %>%
 
 
 #clean up arcmass by dropping data that won't be used for later analysis
-mass.density <- arcmass[, c("label", "pair", "treatment", "sp.cd", "height", "h.above10", 
-                          "mass10", "mass","mratio",
-                          "density10", "density", "tdensity")]
+mass.density <- arcmass %>% select( label, pair, treatment, sp.cd, sp.name,
+                                     height, h.above10, mass10, mass, mratio,
+                          density10, density, tdensity)
 #clean up env
 rm("arcmass", "bcanopy", "canopy", "mass10LM", "massLM", "predictmass",
    "raw.ca", "ucanopy")
