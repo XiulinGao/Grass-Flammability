@@ -20,7 +20,11 @@ ucanopy <- filter(canopy, treatment == 'u') %>%
 #burned    
 bcanopy <- filter(canopy, treatment == 'b') %>%
   mutate(h.above10=height-10) %>% left_join(trials)
-bcanopy <- bcanopy[, c(1:27, 43)]
+bcanopy <- bcanopy %>% select(label, pair, treatment, sp.cd, field.f, field.d, burn.f,
+                              burn.d, tiller.num, height, height.90, drym.10, wda10.1,
+                              wda10.2, wda10.3, wdb10.1, wdb10.2, wdb10.3, dry.m, wda.1,
+                              wda.2, wda.3, wdb.1, wdb.2, wdb.3, h.above10, sp.name, 
+                              photo.type, total.mass)
 
 
 #use unburned plants canopy architecture dataset to predict biomass
