@@ -33,13 +33,15 @@ bcanopy <- bcanopy %>% select(label, pair, treatment, sp.cd, field.f, field.d, b
 
 #0~10cm, use only tiller number
 
-mass10LM <- lm(drym.10 ~ tiller.num + total.mass*sp.cd, data = ucanopy)
+mass10LM <- lm(drym.10 ~ sp.cd*total.mass + tiller.num, data = ucanopy)
+## The best model based on AIC
 summary(mass10LM)
 predictmass <- bcanopy %>% mutate (mass10 = predict(mass10LM, newdata = bcanopy))
 
 #>10cm, use both tiller number and height
 
-massLM <- lm(dry.m ~ tiller.num + h.above10*sp.cd + total.mass*sp.cd, data = ucanopy)
+massLM <- lm(dry.m ~ tiller.num + sp.cd*total.mass, data = ucanopy)
+## Ok, no need to include plant hight
 summary(massLM)
 
 predictmass <- predictmass %>% mutate(mass = predict(massLM, newdata = bcanopy))
@@ -65,10 +67,6 @@ arcmass <- predictmass %>% mutate(vol10 = pi*dia10^2 *10/4) %>%
   mutate(tdensity = total.mass/tvol) %>%
   mutate(ptmass = mass10 + mass)
   
-  
-  
-
-
 #clean up arcmass by dropping data that won't be used for later analysis
 mass.density <- arcmass %>% select( label, pair, treatment, sp.cd, sp.name,
                                      height, h.above10, mass10, mass, mratio,
