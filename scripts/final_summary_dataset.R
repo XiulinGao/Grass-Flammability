@@ -53,4 +53,4 @@ arc.trial <- left_join(trials, mass.density)
 
 #clean up dataset not needed
 rm("balance_data", "balance_sum", "bytrial", "flamburn", "flambytrial", 
-   "temp.alldata", "trials")
+   "trials")
