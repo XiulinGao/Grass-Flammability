@@ -20,13 +20,13 @@ schwilkcolors <- c("#D68D18", "#836B43", "#A0AE6A", "#437683", "#18B0D6")
 
 ## The ggplot theme for all figures.
 bestfit <- geom_smooth(method="lm",se = F, color = "black", size=1.5)
-textsize <- 18
+textsize <- 8
 smsize <- textsize-2
 pt2mm <- 0.35146
 smsize.mm <- smsize*pt2mm
 fontfamily = "Arial"
-col2 <- 17.5 # cm
-col1 <- 8.0 # cm
+col2 <- 16.5 # cm
+col1 <- 7.9 # cm #according to http://fireecologyjournal.org/how-to-submit/
 
 pubtheme   <-  theme_grey() +
              theme(axis.title.y = element_text(family=fontfamily,
