@@ -24,9 +24,9 @@ textsize <- 8
 smsize <- textsize-2
 pt2mm <- 0.35146
 smsize.mm <- smsize*pt2mm
-fontfamily = "Arial"
-col2 <- 16.5 # cm
-col1 <- 7.9 # cm #according to http://fireecologyjournal.org/how-to-submit/
+fontfamily = "Times"
+col2 <- 18.4 # cm
+col1 <- 8.9 # cm #according to http://fireecologyjournal.org/how-to-submit/
 
 pubtheme   <-  theme_grey() +
              theme(axis.title.y = element_text(family=fontfamily,
