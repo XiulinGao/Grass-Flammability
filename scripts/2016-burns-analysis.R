@@ -4,9 +4,10 @@
 ### effect
 
 library(lme4)
-library(AICcmodavg)
+#library(AICcmodavg)
 library(afex)
-library(MuMIn)
+#library(MuMIn)
+library(pcaMethods)
 
 # Look for additional grass trait that may influence flammability besides total biomass.
 # Steps are as follows:
@@ -33,53 +34,100 @@ source("./ggplot-theme.R")
 color <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
            "#0072B2", "#D55E00", "#CC79A7")
 
-#### duration of heating >10 cm ~ total biomass, biomass ratio and density #### 
+############### dimension of grass flammability ################
+## apply principal component analysis to selected flammability measurement 
+## for further analysis
+
+flamabove.PCA <- temp.above %>%
+  select ( dur, lossrate, massloss, degsec,
+           max.fh) %>% pca(nPcs=5, method="ppca",
+                           center=TRUE,scale="uv")
+summary(flamabove.PCA) ## first three axes explain 93% total variance
+## the 2nd and 3rd are equivalent (16.9%, 13.7%)
+biplot(flamabove.PCA, choices = c("PC1","PC2"))
+biplot(flamabove.PCA, choices = c("PC1","PC3"))
+loadings(flamabove.PCA)
+### given loadings, the first axis captures total heat release related
+### measurements (temperature integration, duration above 100 degree, total mass
+### loss had the highest loadings); the second axis captures fire intensity related
+### measurements(max loss rate and max flame height had the highest loading), and the
+### third axis again captures total heat release with total mass loss had the highest 
+### loading. Given temperature integration, duration above 100 and total mass loss
+### are closely related and temperature integration had the highest loading on first 
+### axis, I will choose degsec (temperature integration), max mass loss rate and max
+### flame height for further analysis
+
+#### integrated temp above 100 ~ total biomass, biomass ratio and density #### 
 ##### graphical exploration #####
-ggplot(temp.above, aes(total.mass, dur)) + geom_point() +
-  geom_smooth(method="lm", se=FALSE) ## positive linear relationship 
+ggplot(temp.above, aes(total.mass, degsec)) + geom_point() +
+  geom_smooth(method="lm", se=FALSE)## positive linear relationship 
 ## only look at total biomass effect but not any species effect,
 ## because we do not want to exhaust any "inherent" species variance 
-## in flammability at this step but only want to exclude total biomass effect,
-## which often is a linear positive effect (but see max. flame height below) 
- 
-# take biomass effect out
-dura.lmod <- lm(dur ~ total.mass, data=temp.above)
-summary(dura.lmod) #sig. biomass effect
-# take residuals
-temp.above$dtr.dura <- residuals(dura.lmod)
-#ggplot(temp.above, aes(total.mass, adj_dura)) + geom_point()
-##### graphical exploration to see any biomass ratio or density effect #####
+## in flammability at this step
 
-ggplot(temp.above, aes(mratio, dtr.dura, color=sp.name)) + geom_point() + 
+# take biomass effect out
+degseca.lmod <- lm(degsec ~ total.mass, data=temp.above)
+summary(degseca.lmod) #sig. biomass effect
+# take residuals
+temp.above$crt.degseca <- residuals(degseca.lmod)
+#ggplot(temp.above, aes(total.mass, adj_dura)) + geom_point()
+##### graphical exploration to see trait and weather effect #####
+
+ggplot(temp.above, aes(mratio, crt.degseca, color=sp.name)) + geom_point() + 
   bestfit + scale_color_manual(values=color) 
-# negative?  
-ggplot(temp.above, aes(tdensity, dtr.dura, color=sp.name)) + geom_point() +
+# negative?  two extreme case?
+ggplot(temp.above, aes(tdensity, crt.degseca, color=sp.name)) + geom_point() +
   bestfit + scale_color_manual(values=color)
 # positive?
-
+ggplot(temp.above, aes(humidity, crt.degseca, color=sp.name)) + geom_point() + 
+  bestfit + scale_color_manual(values=color) 
+# weak positive?
+ggplot(temp.above, aes(temp, crt.degseca, color=sp.name)) + geom_point() + 
+  bestfit + scale_color_manual(values=color) 
+# weak negative?
 # rescale numeric variables to fit a full model
 zscore <- function(x) (x - mean(x)) / sd(x)  
-resca_dura <- temp.above %>% mutate_at(c("tdensity", "mratio"),
+resca_degseca <- temp.above %>% mutate_at(c("tdensity", "mratio", "temp", "humidity"),
                                        funs(s = zscore(.)))
-## compare random effects using AIC criteria
-## only random intercept
-# dtrdura.ri <- lmer(dtr.dura ~ mratio_s*tdensity_s + (1 | sp.name),
-              # data=resca_dura, REML=FALSE) 
+## compare random intercept, slope using AIC criteria
+## only species random intercept
+ crtdegseca.ri <- lmer(crt.degseca ~ mratio_s*tdensity_s + temp_s*(mratio_s + tdensity_s) + 
+                      humidity_s*(mratio_s + tdensity_s) + (1 | sp.name), 
+                    data = resca_degseca, REML = FALSE) 
+## trial random intercept
+ crtdegseca.ri2 <- lmer(crt.degseca ~ mratio_s*tdensity_s + temp_s*(mratio_s + tdensity_s) + 
+                       humidity_s*(mratio_s + tdensity_s) + (1 | sp.name) +
+                       (1 | trial.date), 
+                     data = resca_degseca, REML = FALSE)
+anova(crtdegseca.ri, crtdegseca.ri2) ## no need to add trial date as another intercept
+
 ## add ratio as random slope
-# dtrdura.rsi <- lmer(dtr.dura ~ mratio_s*tdensity_s + 
-               # (1 + mratio_s | sp.name), data=resca_dura, REML=FALSE)
-# anova(dtrdura.ri, dtrdura.rsi) ## only intercept
+ crtdegseca.rsi <- lmer(crt.degseca ~ mratio_s*tdensity_s + 
+                          temp_s*(mratio_s + tdensity_s) + 
+                       humidity_s*(mratio_s + tdensity_s) + (1 + mratio_s | sp.name), 
+                      data = resca_degseca, REML = FALSE)
+anova(crtdegseca.ri, crtdegseca.rsi) ## only intercept
 
 ## try density as random slope
-# dtrdura.rsi2 <- lmer(dtr.dura ~ mratio_s*tdensity_s + (1 + tdensity_s | sp.name),
-               # data=resca_dura, REML=FALSE)
-# anova(dtrdura.ri, dtrdura.rsi2) ## ok, only random intercept
+ crtdegseca.rsi2 <- lmer(crt.degseca ~ mratio_s*tdensity_s +
+                           temp_s*(mratio_s + tdensity_s) +
+                      humidity_s*(mratio_s + tdensity_s) +
+                        (1 + tdensity_s | sp.name),
+                      data = resca_degseca, REML = FALSE)
+anova(crtdegseca.ri, crtdegseca.rsi2) ## ok, only random intercept
 
-dtrdura.mod.full <- lmer (dtr.dura ~ tdensity_s*mratio_s + 
+crtdegseca.mod.full <- mixed (crt.degseca ~ tdensity_s*mratio_s + 
+                          temp_s*(mratio_s + tdensity_s) +
+                          humidity_s *(mratio_s + tdensity_s) +
                             (1 | sp.name),
-                          data=resca_dura, REML=FALSE)
-## use vif.mer() to calculate VIF for each variable. The function is adapted 
-## from Austin Frank. See: https://github.com/aufrank/R-hacks/blob/master/mer-utils.R
+                          data = resca_degseca, REML = FALSE)
+anova(crtdegseca.mod.full) # no interaction effect is significant, drop all
+crtdegseca.mod.simple <- lmer(crt.degseca ~ tdensity_s + humidity_s + mratio_s + 
+                                temp_s + (1 | sp.name), 
+                              data= resca_degseca, REML=FALSE)
+## use vif.mer() to calculate variance inflation factor for each variable. 
+## The function is adapted from Austin Frank. 
+## See: https://github.com/aufrank/R-hacks/blob/master/mer-utils.R
 
 vif.mer <- function (fit) {
   ## adapted from rms::vif
@@ -100,67 +148,107 @@ vif.mer <- function (fit) {
   v
 }
 
-vif.mer(dtrdura.mod.full) ## so VIF for fixed effect of mratio and interaction term are
-                    ## greater than 3, let's drop the variable with VIF>3
+vif.mer(crtdegseca.mod.simple) ## keep all
 
-## significance of fixed effects for simple modle using afex::mixed
-dtrdura.mod.simple <- mixed(dtr.dura ~ tdensity_s+ (1|sp.name), 
-                            data= resca_dura, REML=FALSE)
-summary(dtrdura.mod.simple)
-anova(dtrdura.mod.simple) ## so, no effect of density on duration of heating >10cm
+## significance of fixed effects using afex::mixed
+crtdegseca.mod.simple <- mixed(crt.degseca ~ tdensity_s+ mratio_s + temp_s + 
+                                 humidity_s + (1 | sp.name),
+                            data= resca_degseca, REML=FALSE)
+anova(crtdegseca.mod.simple) ## drop non-significant effects
+crtdegseca.mod.final <- mixed(crt.degseca ~ mratio_s + temp_s + (1|sp.name),
+                              data=resca_degseca, REML=FALSE)
+anova(crtdegseca.mod.final)
+summary(crtdegseca.mod.final)
+## Note: temperature integration (>100 degree) above 10cm location was positively 
+## influenced by total biomass, negatively influenced by biomass ratio
+## when take out the two extreme observations(ec29 & sn09), result changed:
+## canopy architecture still has influence on temperature integration, however,
+## it's a positive influence of density but not negative influence of ratio
 
-## Note: duration of heating (>60 degree) above 10cm location was only positively 
-## influenced by total biomass, no effect of density or ratio is detected
-
-##### duration of heating <10cm ~ total biomass, biomass ratio and density ##### 
+##### integrated temp (>100) <10cm ~ total biomass, biomass ratio and density ##### 
 ######### graphical exploration #########
 
-ggplot(temp.below, aes(total.mass, dur)) + geom_point() +
+ggplot(temp.below, aes(total.mass, degsec)) + geom_point() +
  geom_smooth(method="lm", se=FALSE)
 ## positive linear relationship 
 
 ## build linear model and take residuals
-durb.lmod <- lm(dur ~ total.mass, data=temp.below)
-summary(durb.lmod) #sig. biomass effec
+degsecb.lmod <- lm(degsec ~ total.mass, data= temp.below)
+summary(degsecb.lmod) #sig. biomass effec
 
-temp.below$dtr.durb <- residuals(durb.lmod)
+temp.below$crt.degsecb <- residuals(degsecb.lmod)
 
 ##### graphical exploration ######
-ggplot(temp.below, aes(tdensity, dtr.durb, color=sp.name)) + geom_point()+
+ggplot(temp.below, aes(tdensity, crt.degsecb, color=sp.name)) + geom_point()+
   bestfit + scale_color_manual(values=color)
 ## positive 
 
-ggplot (temp.below, aes(mratio, dtr.durb, color=sp.name)) + geom_point()+
+ggplot (temp.below, aes(mratio, crt.degsecb, color=sp.name)) + geom_point()+
   bestfit + scale_color_manual(values=color) 
 ## negative
+ggplot (temp.below, aes(humidity, crt.degsecb, color=sp.name)) + geom_point()+
+  bestfit + scale_color_manual(values=color) 
+## positive?
+ggplot (temp.below, aes(temp, crt.degsecb, color=sp.name)) + geom_point()+
+  bestfit + scale_color_manual(values=color) 
+## negative?
 ## rescale numeric variables
-resca_durb <- temp.below %>% mutate_at(c("tdensity", "mratio"),
+resca_degsecb <- temp.below %>% mutate_at(c("tdensity", "mratio", "humidity", "temp"),
                                        funs(s = zscore(.)))
 
 ## compare random slope, intercept
 ## only random intercept
-#dtrdurb.ri <- lmer (dtr.durb ~ tdensity_s*mratio_s + (1|sp.name),
-                    #data=resca_durb, REML=FALSE)
-## add density as random slope
-#dtrdurb.rsi <- lmer (dtr.durb ~ tdensity_s*mratio_s + (1 + tdensity_s|sp.name),
-                     #data=resca_durb, REML=FALSE)
-#anova(dtrdurb.ri, dtrdurb.rsi) ## should only include random intercept
-## try ratio as random slope
-#dtrdurb.rsi2 <- lmer(dtr.durb ~ tdensity_s*mratio_s + (1 + mratio_s|sp.name),
-                     #data=resca_durb, REML=FALSE)
-#anova(dtrdurb.ri, dtrdurb.rsi2) ## no need to include any random slope
+crtdegsecb.ri <- lmer (crt.degsecb ~ tdensity_s*mratio_s + 
+                      humidity_s*(mratio_s + tdensity_s)+
+                      temp_s*(mratio_s + tdensity_s)+
+                      (1|sp.name), data= resca_degsecb, REML=FALSE)
+## trial date intercept
+crtdegsecb.ri2 <- lmer (crt.degsecb ~ tdensity_s*mratio_s + 
+                       humidity_s*(mratio_s + tdensity_s)+
+                       temp_s*(mratio_s + tdensity_s)+
+                      (1|sp.name) + (1|trial.date), data=resca_degsecb, REML=FALSE)
+anova(crtdegsecb.ri, crtdegsecb.ri2) ## only species as random intercept
 
-dtrdurb.mod.full <- lmer(dtr.durb ~ mratio_s*tdensity_s + (1|sp.name),
-                         data=resca_durb, REML=FALSE) 
+## add density as random slope
+crtdegsecb.rsi <- lmer (crt.degsecb ~ tdensity_s*mratio_s + 
+                      humidity_s*(mratio_s + tdensity_s)+
+                     temp_s*(mratio_s + tdensity_s)+
+                       (1 + tdensity_s|sp.name),
+                     data=resca_degsecb, REML=FALSE)
+anova(crtdegsecb.ri, crtdegsecb.rsi) ## no random slope
+## try ratio as random slope
+crtdegsecb.rsi2 <- lmer(crt.degsecb ~ tdensity_s*mratio_s + 
+                      humidity_s*(mratio_s + tdensity_s) +
+                       temp_s*(mratio_s + tdensity_s) +
+                       (1 + mratio_s|sp.name),
+                     data=resca_degsecb, REML=FALSE)
+anova(crtdegsecb.ri, crtdegsecb.rsi2) ## no need to include any random slope
+
+crtdegsecb.mod.full <- mixed(crt.degsecb ~ mratio_s*tdensity_s + 
+                    humidity_s*(mratio_s + tdensity_s)+
+                    temp_s*(mratio_s + tdensity_s)+ 
+                    (1|sp.name), data=resca_degsecb, REML=FALSE) 
+anova(crtdegsecb.mod.full) # drop all interaction term
+crtdegsecb.mod.simple <- lmer(crt.degsecb ~ mratio_s + tdensity_s +
+                             humidity_s + temp_s + (1|sp.name),
+                           data=resca_degsecb, REML=FALSE)
 ## vif
-vif.mer(dtrdurb.mod.full) ## drop mratio 
+vif.mer(crtdegsecb.mod.simple) ## keep all
 ## afex::mixed see significance of effect
-dtrdurb.mod.simple <- mixed(dtr.durb ~ tdensity_s + (1|sp.name),
-                            data=resca_durb, REML=FALSE)
-summary(dtrdurb.mod.simple)
-anova(dtrdurb.mod.simple) ##significant effect of density
-## Note: duration of heating <10cm were positively influenced by both
-## total biomass and biomass density. 
+crtdegsecb.mod.simple <- mixed(crt.degsecb ~ tdensity_s + mratio_s+
+                                 humidity_s + temp_s + (1|sp.name),
+                               data=resca_degsecb, REML=FALSE)
+anova(crtdegsecb.mod.simple)
+
+## drop non-significant fixed effect
+crtdegsecb.mod.final <- mixed(crt.degsecb ~ tdensity_s + humidity_s + temp_s +
+                                (1|sp.name),data=resca_degsecb, REML=FALSE)
+anova(crtdegsecb.mod.final)
+summary(crtdegsecb.mod.final)
+##significant positive effect of density, humidity and temperature on degsec<10cm
+## Note: integrated temperature (>100 degree) <10cm were positively influenced by 
+## total biomass, biomass density, humidity and temp ( residance time increased? slow rate?)  
+## *result is the same when take the one extreme case out* 
 
 ## look at R squared using MuMIn :: r.squaredGLMM()
 #r.squaredGLMM(lmer(dtr.durb ~ tdensity_s + (1|sp.name),
@@ -171,157 +259,246 @@ anova(dtrdurb.mod.simple) ##significant effect of density
 ggplot(data=flam.loss, aes(total.mass, lossrate)) + geom_point() +
    geom_smooth(method="lm", se=FALSE)
 ## triangular, not a good linear relationship
-## density?
-ggplot(data=flam.loss, aes(tdensity, lossrate)) + geom_point() +
-  geom_smooth(method="lm", se=FALSE) ## negative 
-## ratio?
-ggplot(data=flam.loss, aes(mratio, lossrate)) + geom_point() +
-  geom_smooth(method="lm", se=FALSE) ## weak positive 
+## log total biomass
+ggplot(data=flam.loss, aes(logtmass, lossrate)) + geom_point() +
+  geom_smooth(method="lm", se=FALSE)
 
-## looks like total biomass is not a good predictor for maximum mass loss rate, 
-## to keep method consistent, I will go ahead build linear model with only biomass
-## being the only predictor at first step
-
-lossr.lmod <- lm(lossrate ~ total.mass, data=flam.loss)
+lossr.lmod <- lm(lossrate ~ logtmass, data=flam.loss)
 summary(lossr.lmod) ##residuals is not completely dependent from total.mass?
-flam.loss$dtr.lossr <- residuals(lossr.lmod)
+flam.loss$crt.lossr <- residuals(lossr.lmod)
+
+######## graphical explore effect of density, ratio and weather ##########
+ggplot (data=flam.loss, aes(tdensity, crt.lossr)) + geom_point()+
+  geom_smooth(method="lm", se=FALSE) ## weak negative?
+
+ggplot (data=flam.loss, aes(mratio, crt.lossr)) + geom_point()+
+  geom_smooth(method="lm", se=FALSE) ## weak positive?
+
+ggplot (data=flam.loss, aes(temp, crt.lossr)) + geom_point()+
+  geom_smooth(method="lm", se=FALSE) ## weak positive?
+
+ggplot (data=flam.loss, aes(humidity, crt.lossr)) + geom_point()+
+  geom_smooth(method="lm", se=FALSE) ## weak negative?
 
 #rescale variables
-resca_lossr <- flam.loss %>% mutate_at(c("tdensity", "mratio"),
+resca_lossr <- flam.loss %>% mutate_at(c("tdensity", "mratio", "humidity", "temp"),
                                        funs(s = zscore(.)))
 ## only random intercept
-#lossr.ri <- lmer(dtr.lossr ~ tdensity_s*mratio_s + 
-                   #(1|sp.name), data=resca_lossr, REML=FALSE)
+lossr.ri <- lmer(crt.lossr ~ tdensity_s*mratio_s + 
+                humidity_s*(tdensity_s + mratio_s) +
+                 temp_s*(tdensity_s + mratio_s) +
+                   (1 | sp.name), data = resca_lossr, REML = FALSE)
+## trial date as another intercept
+lossr.ri2 <- lmer(crt.lossr ~ tdensity_s*mratio_s + 
+                    humidity_s*(tdensity_s + mratio_s) +
+                    temp_s*(tdensity_s + mratio_s) +
+                    (1 | sp.name) + (1 | trial.date),
+                  data = resca_lossr, REML = FALSE)
+anova(lossr.ri, lossr.ri2) ## no need to add trial date as another intercept
+
 ## try density as slope
-#lossr.rsi <- lmer(dtr.lossr ~ tdensity_s*mratio_s + 
-                     #(1 + tdensity_s|sp.name), data=resca_lossr, REML=FALSE)
-#anova(lossr.ri, lossr.rsi) ## no denisty slope
+lossr.rsi <- lmer(crt.lossr ~ tdensity_s*mratio_s + 
+                  humidity_s*(tdensity_s + mratio_s) +
+                  temp_s*(tdensity_s + mratio_s) +
+                   (1 + tdensity_s|sp.name),
+                  data=resca_lossr, REML=FALSE)
+anova(lossr.ri, lossr.rsi) ## no denisty slope
+
 ## try ratio as slope
-#lossr.rsi2 <- lmer(dtr.lossr ~ tdensity_s*mratio_s + 
-                     #(1 + mratio_s|sp.name), data=resca_lossr, REML=FALSE)
-#anova(lossr.ri, lossr.rsi2) ## ok, mod should not include any random slope
+lossr.rsi2 <- lmer(crt.lossr ~ tdensity_s*mratio_s + 
+                    humidity_s*(tdensity_s + mratio_s) +
+                   temp_s*(tdensity_s + mratio_s) +
+                  (1 + mratio_s|sp.name), 
+                   data=resca_lossr, REML=FALSE)
+anova(lossr.ri, lossr.rsi2) ## no ratio as random slope
 
+lossr.mod.full <- mixed(crt.lossr ~ tdensity_s*mratio_s + 
+                          humidity_s*(tdensity_s + mratio_s) +
+                          temp_s*(tdensity_s + mratio_s) +
+                          (1|sp.name),
+                        data=resca_lossr, REML=FALSE)
+anova(lossr.mod.full) ## drop interaction terms
+
+lossr.mod.simple <- lmer(crt.lossr ~ tdensity_s + mratio_s + humidity_s +
+                           temp_s + (1|sp.name),
+                         data=resca_lossr, REML=FALSE)
 ## vif
-lossr.vif.test <- lmer (dtr.lossr ~ tdensity_s*mratio_s +
-                          (1|sp.name), data=resca_lossr, REML=FALSE)
-vif.mer(lossr.vif.test) ## drop mratio
+vif.mer(lossr.mod.simple) ## keep all
 ## afex::mixed to see significance of fixed effects
-lossr.mod.simple <- mixed (dtr.lossr ~ tdensity_s +  (1|sp.name), 
-                          data=resca_lossr, REML=FALSE)
-anova(lossr.mod.simple) ## density has p-value <0.05
+lossr.mod.simple <- mixed (crt.lossr ~ tdensity_s + mratio_s + humidity_s +
+                             temp_s + (1|sp.name),
+                           data=resca_lossr, REML=FALSE)
+anova(lossr.mod.simple) ## no effect
 
-summary(lossr.mod.simple)
 ## Note: maximum biomass loss rate is negatively influenced by
-## total mass, however, only 4% total variance can be explained.
-## biomass density has additional negative effect on max. biomass loss rate
-## this is in consistent with previous study
+## total mass (logged); no effect of other traits or weather factors 
+
 
 ###### max flame height ~ total biomass, biomass density and ratio ######
 ######## graphical exploration #########
-  ggplot(data=arc.trial, aes(total.mass, max.fh)) + geom_point() +
+ggplot(data=arc.trial, aes(total.mass, max.fh)) + geom_point() +
   geom_smooth(method="lm", se=FALSE)
-## max. flame height is saturated at higher value of total mass, not linear   
+## max. flame height is saturated at higher value of total mass, not linear 
+## try log transfer biomass
+ggplot(data=arc.trial, aes(logtmass, max.fh)) + geom_point() +
+  geom_smooth(method="lm", se=FALSE) ## ok positive linear
 
 ## instead of linear mod, fit a saturation function 
   maxfh.nlmod <- nls(max.fh ~ a*total.mass/ (total.mass+b), data=arc.trial, 
   start=list(a=100, b=5)) 
-  summary(maxfh.nlmod)
+  #summary(maxfh.nlmod)
   #maxfh.predict <- predict(maxfh.nlmod, newdata=arc.trial)
   #ggplot(arc.trial, aes(total.mass, max.fh)) + geom_point(size=1.5) +
   #geom_line(aes(total.mass, maxfh.predict), size=1.5, color="black") 
+## take out effect of logged biomass on max flame height
+maxfh.lmod <- lm(max.fh ~ logtmass, data=arc.trial)
+summary(maxfh.lmod)
+arc.trial$crt.maxfh <- residuals(maxfh.lmod)
 
 #### graphical exploration of ratio and density effect ####
-## take residuals  
-  arc.trial$dtr.fh <- residuals(maxfh.nlmod)
- #ggplot(arc.trial, aes(total.mass, adj_fh)) + geom_point() 
-ggplot(arc.trial, aes(tdensity, dtr.fh)) + geom_point() +
+
+ggplot(arc.trial, aes(tdensity, crt.maxfh)) + geom_point() +
+  geom_smooth(method="lm", se=FALSE) ## weak negative?
+
+ggplot(arc.trial, aes(mratio, crt.maxfh)) + geom_point() +
   geom_smooth(method="lm", se=FALSE) ## NO
 
-ggplot(arc.trial, aes(mratio, dtr.fh)) + geom_point() +
-  geom_smooth(method="lm", se=FALSE) ## NO
+ggplot(arc.trial, aes(temp, crt.maxfh)) + geom_point() +
+  geom_smooth(method="lm", se=FALSE) ## weak positive?
+
+ggplot(arc.trial, aes(humidity, crt.maxfh)) + geom_point() +
+  geom_smooth(method="lm", se=FALSE) ## weak negative?
 
 # rescale variables
-resca_maxfh <- arc.trial %>% mutate_at(c("tdensity", "mratio"), 
+resca_maxfh <- arc.trial %>% mutate_at(c("tdensity", "mratio", "humidity", "temp"), 
                                               funs( s = zscore(.)))
-## only include random intercept 
-#maxfh.ri <- lmer(dtr.fh ~ tdensity_s*mratio_s + (1 | sp.name),
-                 #data=resca_maxfh, REML=FALSE)
+## only include species as random intercept 
+maxfh.ri <- lmer(crt.maxfh ~ tdensity_s*mratio_s + humidity_s*(tdensity_s + mratio_s) +
+                 temp_s*(tdensity_s + mratio_s) +
+                   (1 | sp.name),data=resca_maxfh, REML=FALSE)
+## trial date as another intercept
+maxfh.ri2 <- lmer(crt.maxfh ~ tdensity_s*mratio_s + humidity_s*(tdensity_s + mratio_s) +
+                    temp_s*(tdensity_s + mratio_s) +
+                    (1 | sp.name) + (1 | trial.date),
+                   data=resca_maxfh, REML=FALSE)
+anova(maxfh.ri, maxfh.ri2) ## no need to add
+
 ## add tdensity as random slope
-## note: because correlated randome slope and intercept won't work for
-## this case (keep getting warnings) and I don't think there's need to 
-## make random slope and intercept correlated here, so I'll set up this
-## random slope and intercept uncorrelated here
-#maxfh.rsi <- lmer(dtr.fh ~ tdensity_s*mratio_s + ( 0 + tdensity_s | sp.name) +
-                    #(1|sp.name), data=resca_maxfh, REML=FALSE)
-#anova(maxfh.ri, maxfh.rsi) ## no need to add tdensity as slope
+
+maxfh.rsi <- lmer(crt.maxfh ~ tdensity_s*mratio_s + humidity_s*(tdensity_s + mratio_s) +
+                  temp_s*(tdensity_s + mratio_s) +
+                    ( 1 + tdensity_s | sp.name), data=resca_maxfh, REML=FALSE)
+anova(maxfh.ri, maxfh.rsi) ## no need to add tdensity as slope
 ## try ratio as slope
-#maxfh.rsi2 <- lmer(dtr.fh ~ tdensity_s*mratio_s + ( 0 + mratio_s | sp.name) +
-                     #(1|sp.name), data=resca_maxfh, REML=FALSE)
-#anova(maxfh.ri, maxfh.rsi2) ## ok, no slope
+maxfh.rsi2 <- lmer(crt.maxfh ~ tdensity_s*mratio_s + humidity_s*(tdensity_s + mratio_s) + 
+                  temp_s*(tdensity_s + mratio_s) +
+                     ( 1 + mratio_s | sp.name), data=resca_maxfh, REML=FALSE)
+anova(maxfh.ri, maxfh.rsi2) ## ok, no slope
 
+crtmaxfh.mod.full <- mixed(crt.maxfh ~ tdensity_s*mratio_s + 
+                          humidity_s*(tdensity_s + mratio_s) +
+                          temp_s*(tdensity_s + mratio_s) + (1|sp.name),
+                          data= resca_maxfh, REML=FALSE) 
+anova(crtmaxfh.mod.full) 
+## drop interaction terms except mrario:humidity
+crtmaxfh.mod.simple <- lmer(crt.maxfh ~ tdensity_s +  temp_s + mratio_s* humidity_s +
+                           (1|sp.name), data=resca_maxfh, REML=FALSE)
 ## vif test and drop variable with vif >3
-maxfh.vif.test <- lmer (dtr.fh ~ mratio_s*tdensity_s + (1 |sp.name),
-                        data=resca_maxfh, REML=FALSE)
-vif.mer(maxfh.vif.test) ## no need to drop any here
 
-#drop non-significant interaction term
-dtrmaxfh.mod.full <- mixed(dtr.fh ~ mratio_s*tdensity_s + (1 |sp.name),
-                      data=resca_maxfh, REML=FALSE)
-anova(dtrmaxfh.mod.full) ## very weak signal for density effect
+vif.mer(crtmaxfh.mod.simple) ## no need to drop any here
 
-dtrmaxfh.mod.simple <- mixed (dtr.fh ~ tdensity_s + (1 |sp.name),
-                           data=resca_maxfh, REML=FALSE)
-summary(dtrmaxfh.mod.simple)
-anova(dtrmaxfh.mod.simple) ## it is a saturation relationship between max.
-                        ## flame height and total mass
-## Note: max. flame height seems only affected by total biomass, however, it is
-## a saturation function but not linear
+## look at significance
+crtmaxfh.mod.simple <- mixed (crt.maxfh ~ temp_s + tdensity_s +  mratio_s*humidity_s +
+                        (1 |sp.name), data=resca_maxfh, REML=FALSE)
+anova(crtmaxfh.mod.simple) ## very weak signal for density effect, however strong 
+## interaction between humidity and mratio
+## drop non-significant fixed effect
+
+crtmaxfh.mod.final <- mixed (crt.maxfh ~ tdensity_s + mratio_s*humidity_s +
+                               (1 |sp.name), data=resca_maxfh, REML=FALSE)
+anova(crtmaxfh.mod.final) ## significant negative effect of density and humidity on
+                          ## biomass corrected max flame height, also significant 
+                          ## interaction between humidity and mratio
+summary(crtmaxfh.mod.final)
+
+## Note: max flame height is positively influenced by fuel load; meanwhile, biomass
+## density and humidity negatively influenced max flame height; there is also significant
+## interaction effect between humidity and mass ratio
 
 ##### mass loss ~ total mass, biomass density and ratio #####
-
-#cairo_pdf("example.pdf", family="Arial", width=6, height=6)
 
 ggplot(data=arc.trial, aes(total.mass, mconsum)) + geom_point() +
   geom_smooth(method="lm", se=FALSE) 
   
 tmlossLM <- lm(mconsum ~ total.mass, data=arc.trial)
 summary(tmlossLM)
-arc.trial$dtr.mloss <- residuals(tmlossLM)
+arc.trial$crt.mloss <- residuals(tmlossLM)
 
-resca_mloss <- arc.trial %>% mutate_at(c("tdensity", "mratio"),
+resca_mloss <- arc.trial %>% mutate_at(c("tdensity", "mratio", "humidity", "temp"),
                                           funs(s = zscore(.)))
 ##### graphical exploration ######
-ggplot(arc.trial, aes(tdensity, dtr.mloss, color=sp.name)) + geom_point() +
-  bestfit + scale_color_manual(values=color) #positive
+ggplot(arc.trial, aes(tdensity, crt.mloss, color=sp.name)) + geom_point() +
+  bestfit + scale_color_manual(values=color) #positive?
 
-ggplot(arc.trial, aes(mratio, dtr.mloss, color=sp.name)) + geom_point() +
-  bestfit + scale_color_manual(values=color) #negative
+ggplot(arc.trial, aes(mratio, crt.mloss, color=sp.name)) + geom_point() +
+  bestfit + scale_color_manual(values=color) #negative?
+
+ggplot (arc.trial, aes(humidity, crt.mloss, color=sp.name)) + geom_point() +
+  bestfit + scale_color_manual(values=color) #no?
+
+ggplot (arc.trial, aes(temp, crt.mloss, color=sp.name)) + geom_point() +
+  bestfit + scale_color_manual(values=color) #negative?
 
 ## only random intercept
-mloss.ri <- lmer(dtr.mloss ~ mratio_s * tdensity_s + 
+mloss.ri <- lmer(crt.mloss ~ mratio_s * tdensity_s + humidity_s*(mratio_s + tdensity_s) +
+                temp_s*(mratio_s + tdensity_s) +
                    (1 |sp.name), data=resca_mloss, REML=FALSE)
+## add trial date as another intercept
+mloss.ri2 <- lmer(crt.mloss ~ mratio_s * tdensity_s + humidity_s*(mratio_s + tdensity_s) +
+                   temp_s*(mratio_s + tdensity_s) + (1 | trial.date) +
+                   (1 |sp.name), data=resca_mloss, REML=FALSE)
+anova(mloss.ri, mloss.ri2) ## only species as intercept
+      
 ##add mratio as slope
-mloss.rsi <- lmer(dtr.mloss ~ mratio_s*tdensity_s + (1 + mratio_s|sp.name), 
-                      data=resca_mloss, REML=FALSE)
+mloss.rsi <- lmer(crt.mloss ~ mratio_s * tdensity_s + humidity_s*(mratio_s + tdensity_s)+
+                    temp_s*(mratio_s + tdensity_s) +
+                    (1 + mratio_s|sp.name), data=resca_mloss, REML=FALSE)
 anova(mloss.ri, mloss.rsi) # need add mratio as slope
 ## add density
-mloss.rsi2 <- lmer(dtr.mloss ~ mratio_s*tdensity_s + (1 + mratio_s + tdensity_s|sp.name), 
+mloss.rsi2 <- lmer(crt.mloss ~ mratio_s*tdensity_s + humidity_s*(mratio_s + tdensity_s) +
+                     temp_s*(mratio_s + tdensity_s) +
+                     (1 + mratio_s + tdensity_s|sp.name), 
                    data=resca_mloss, REML=FALSE)
 
 anova(mloss.rsi, mloss.rsi2) #should only include mratio as random slope
+
+crtmloss.mod.full <- mixed (crt.mloss ~ mratio_s*tdensity_s + 
+                           humidity_s*(mratio_s + tdensity_s)+
+                           temp_s*(mratio_s + tdensity_s) +
+                           (1 + mratio_s|sp.name), 
+                         data=resca_mloss, REML=FALSE)
+
+anova(crtmloss.mod.full) ## only include interaction term for mratio and tdensity
+crtmloss.mod.simple <- lmer(crt.mloss ~ mratio_s*tdensity_s+ humidity_s + temp_s +
+                              (1 + mratio_s|sp.name),
+                            data=resca_mloss, REML=FALSE)
 ## vif
-mloss.vif.test <- lmer(dtr.mloss ~ mratio_s*tdensity_s + (1 + mratio_s|sp.name), 
-                       data=resca_mloss, REML=FALSE)
-vif.mer(mloss.vif.test) ## no need to drop any variable
+vif.mer(crtmloss.mod.simple) ## no need to drop any variable
 ## significance of fixed effect
-dtrmloss.mod.full <- mixed (dtr.mloss ~ mratio_s*tdensity_s + (1 + mratio_s|sp.name), 
-                       data=resca_mloss, REML=FALSE)
-summary(dtrmloss.mod.full)
-anova(dtrmloss.mod.full) ## biomass consumption is only influenced by total mass
+crtmloss.mod.simple <- mixed (crt.mloss ~ mratio_s*tdensity_s + 
+                                humidity_s + temp_s + (1 + mratio_s|sp.name),
+                                data=resca_mloss, REML=FALSE)
+anova(crtmloss.mod.simple) ## weak effect of density and strong interaction between
+                           ## density and ratio
+
+crtmloss.mod.final <- mixed(crt.mloss ~ tdensity_s*mratio_s + (1+mratio_s|sp.name),
+                            data=resca_mloss, REML=FALSE)
+anova(crtmloss.mod.final) 
+## biomass consumption is only influenced by total mass
 ## however, there is a significant cross-over interaction between biomass ratio and
 ## density
 
-#Conclusion: totla biomass has first order effect on all flammability measurements
-#Besides that, biomass density has additional positive effect on duration
-#of heating at <10cm location and negative effect on max. mass loss rate 
+
+
+
 
