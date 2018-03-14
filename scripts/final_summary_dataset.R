@@ -27,7 +27,7 @@ temp.alldata <- left_join(trials, tempsec.sum) %>%
 temp.above <- temp.alldata %>% filter(location=="above.sec") %>%
   mutate(log.tmass=log(total.mass))
 
-temp.below <- temp.alldata %>% filter(location=="below.sec") %>%
+temp.base <- temp.alldata %>% filter(location=="base") %>%
   mutate(log.tmass=log(total.mass))
 
 #smog.alldata <- left_join(fix.trials, fix.tempsec.sum) %>%
