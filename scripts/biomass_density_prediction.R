@@ -20,6 +20,7 @@ ucanopy <- filter(canopy, treatment == 'u') %>%
 #burned    
 bcanopy <- filter(canopy, treatment == 'b') %>%
   mutate(h.above10=height-10) %>% left_join(trials)
+
 bcanopy <- bcanopy %>% select(label, pair, treatment, sp.cd, field.f, field.d, burn.f,
                               burn.d, tiller.num, height, height.90, drym.10, wda10.1,
                               wda10.2, wda10.3, wdb10.1, wdb10.2, wdb10.3, dry.m, wda.1,
@@ -31,20 +32,23 @@ bcanopy <- bcanopy %>% select(label, pair, treatment, sp.cd, field.f, field.d, b
 #for burned plants with using tiller number, height, sp.cd and total 
 #biomass as prediction factor. 
 
-#0~10cm, use only tiller number
-
+# use species, total.mass and tiller number as predictors to build linear model for
+# each section, then see which model works better
+# <10cm
 mass10LM <- lm(drym.10 ~ sp.cd*total.mass + tiller.num, data = ucanopy)
 ## The best model based on AIC
-summary(mass10LM)
-predictmass <- bcanopy %>% mutate (mass10 = predict(mass10LM, newdata = bcanopy))
+summary(mass10LM) # adjusted R squared: 0.94
+#>10cm
+massLM <- lm(dry.m ~ sp.cd*total.mass + tiller.num, data=ucanopy)
+summary(massLM) # adjusted R squared: 0.98
+## so predict biomass for above 10cm section because model works better
+## based on adjusted R squared 
 
-#>10cm, use both tiller number and height
+predictmass <- bcanopy %>% mutate (mass = predict(massLM, newdata = bcanopy))
 
-massLM <- lm(dry.m ~ tiller.num + sp.cd*total.mass, data = ucanopy)
-## Ok, no need to include plant hight
-summary(massLM)
+#<10cm, use difference between total mass and mass <10cm
 
-predictmass <- predictmass %>% mutate(mass = predict(massLM, newdata = bcanopy))
+predictmass <- predictmass %>% mutate(mass10 = total.mass-mass)
 
 #then calculate biomass density for both sections, is mass density for whole plant 
 #needed?
