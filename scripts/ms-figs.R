@@ -5,6 +5,7 @@
 
 #library(grid)
 library(dplyr)
+library(tidyr)
 library(pcaMethods)
 library(ggplot2)
 library(xtable)
@@ -360,3 +361,37 @@ ggsave("../results/Fig7_lossrate_density.pdf", width = col1, height= 0.9*col1,
 #ggsave("../results/fig8_maxfh_biomass.pdf", width = col1, height= 0.9*col1, 
        #units="cm")
 
+##### Table of species name, shade tolerance and species mean of measurements #####
+
+summary.data <- temp.alldata %>% select ( sp.name, shade.tolerance, total.mass, 
+                                          tdensity, mratio, location, degsec, 
+                                          lossrate) %>% spread(location, degsec)
+# dorp the "NA" column
+summary.data <- summary.data[, -9]
+# join observation with biomass-predicted measurements
+mod <- lm(degsec ~ total.mass, data=temp.above)
+mod2 <- lm(degsec ~ total.mass, data=temp.base)
+mod3 <- lm(lossrate ~ total.mass, data=flam.loss)
+temp25 <- temp.above %>% select(sp.name, shade.tolerance, utrial,total.mass) %>%
+                                mutate(prdc.degsec25 = predict(mod, newdata=.))
+tempb <- temp.base %>% select (sp.name, shade.tolerance, utrial,total.mass) %>%
+  mutate(prdc.degsec = predict(mod2, newdata=.))
+lossr <- flam.loss %>% select (sp.name, shade.tolerance, utrial,total.mass) %>%
+  mutate(prdc.lossr = predict(mod3, newdata=.))
+
+# join observation with predict data
+summary.data <- summary.data %>% left_join(temp25) %>% left_join(tempb) %>%
+  left_join(lossr)
+summary.tab <- summary.data %>% group_by (sp.name) %>% 
+  summarize( shade.tolerance = shade.tolerance[1],
+             mean.tm = mean(total.mass, na.rm=TRUE), mean.bhr = mean(mratio,na.rm=TRUE),
+             mean.den = mean(tdensity, na.rm=TRUE),
+             mean.degsec = mean(base, na.rm=TRUE),
+             prdc.degsec = mean(prdc.degsec, na.rm=TRUE),
+             mean.degsec25 = mean(above.sec, na.rm=TRUE),
+             prdc.degsec25 = mean(prdc.degsec25, na.rm=TRUE),
+             mean.lossr = mean(lossrate, na.rm=TRUE),
+             prdc.lossr = mean(prdc.lossr, na.rm=TRUE))
+summary.tab
+print(xtable(summary.tab, digits = c(0,0, 0, 2, 2, 4, 2, 2, 2, 2, 3, 3)),
+      type="html", file="../results/tab1_species_summary.html")
