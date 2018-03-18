@@ -5,9 +5,10 @@ treatment,string,,"it indicates whether the specimen is used for burn trial or n
 sp.cd,string,,USDA species code 
 sp.name,string,,scientific name
 photo.type,string,,photosynthetic pathway 
+shade.tolerance,string,,indicates if species can tolerate shade
 trial.date,string,m/dd/yy,date when the burn trial is conducted
 trial.num,numeric,count,numbers refer to the count of burn trials conducted on trial date by the point
-temp,numeric,FÁ,ambient temperature taken right before each burn trial start
+temp,numeric,Fç,ambient temperature taken right before each burn trial start
 humidity,numeric,%,ambient humidity taken right before each burn trial start
 wind.v,numeric,km/h,wind velocity taken right before each burn start
 start.t,string,hh:mm,"the start time for each burn trial, taken at the point when weighting the initial weight of burn specimen"
