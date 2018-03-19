@@ -9,6 +9,7 @@ library(tidyr)
 library(pcaMethods)
 library(ggplot2)
 library(xtable)
+library(qwraps2)
 
 source("./final_summary_dataset.R")
 source("./ggplot-theme.R")
@@ -382,16 +383,31 @@ lossr <- flam.loss %>% select (sp.name, shade.tolerance, utrial,total.mass) %>%
 # join observation with predict data
 summary.data <- summary.data %>% left_join(temp25) %>% left_join(tempb) %>%
   left_join(lossr)
+# summarize species mean of measurements, also can use qwraps2::summary_table
 summary.tab <- summary.data %>% group_by (sp.name) %>% 
   summarize( shade.tolerance = shade.tolerance[1],
-             mean.tm = mean(total.mass, na.rm=TRUE), mean.bhr = mean(mratio,na.rm=TRUE),
-             mean.den = mean(tdensity, na.rm=TRUE),
-             mean.degsec = mean(base, na.rm=TRUE),
-             prdc.degsec = mean(prdc.degsec, na.rm=TRUE),
-             mean.degsec25 = mean(above.sec, na.rm=TRUE),
-             prdc.degsec25 = mean(prdc.degsec25, na.rm=TRUE),
-             mean.lossr = mean(lossrate, na.rm=TRUE),
-             prdc.lossr = mean(prdc.lossr, na.rm=TRUE))
+        # use qwraps2::mean_sd function to get mean and standard deviation
+        mean.tm = mean_sd(total.mass, digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),  
+        mean.mhr= mean_sd(mratio,digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),
+        mean.den = mean_sd(tdensity, digits = 4, denote_sd = "paren", show_n ="never",na_rm=TRUE),
+        mean.degsec = mean_sd(base, digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),
+        prdc.degsec = mean_sd(prdc.degsec, digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),
+        mean.degsec25 = mean_sd(above.sec, digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),
+        prdc.degsec25 = mean_sd(prdc.degsec25, digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),
+        mean.lossr = mean_sd(lossrate, digits = 3, denote_sd = "paren", show_n ="never", na_rm=TRUE),
+        prdc.lossr = mean_sd(prdc.lossr, digits = 3, denote_sd = "paren", show_n ="never", na_rm=TRUE))
 summary.tab
+# rename column
+summary.tab <- summary.tab %>% rename("Species" = sp.name, "Shade tolerance" = shade.tolerance,
+                                      "Total mass" = mean.tm, "Mass height ratio" = mean.mhr,
+                                      "Density" = mean.den, 
+                                      "Temperature integration (0cm)" = mean.degsec,
+                                      "Predict temperature integration (0cm)" = prdc.degsec,
+                                      "Temperature integration (25cm)" = mean.degsec25,
+                                      "Predict temperature integration (25cm)" = prdc.degsec25,
+                                      "Mass loss rate" = mean.lossr,
+                                      "Predict mass loss rate" = prdc.lossr)
+
 print(xtable(summary.tab, digits = c(0,0, 0, 2, 2, 4, 2, 2, 2, 2, 3, 3)),
       type="html", file="../results/tab1_species_summary.html")
+# looks funny and may be too large to include in manuscript, as appedix?
