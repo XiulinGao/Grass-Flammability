@@ -199,7 +199,7 @@ ggplot(aes(total.mass, degsec)) + geom_point(size=ptsize, shape=16) +
   geom_smooth(method="lm", se=FALSE, size=lnsize,color="black") + 
   #remove obervations of 0 in plot
   ylim(c(0.00001,350000)) + xlim(c(0, 200)) +
-  ylab(expression("Temperature integration ("*degree*C*".s)")) +
+  ylab(expression("Temperature integration ("*degree*C*" s)")) +
   xlab("Total above ground biomass (g)") + 
    pubtheme.nogridlines
 
@@ -239,7 +239,7 @@ ggplot(temp.above, aes(mratio, crt.degseca, color=sp.name)) +
   geom_point(data=degseca.byspecies, size=ptsize+1, alpha=1, shape=16,
              aes(color=sp.name))+
   xlim(c(0, 6)) + ylim(c(-25000, 25000)) +
-  ylab(expression("Mass corrected temperature integration ("*degree*C*".s)")) +
+  ylab(expression("Mass corrected temperature integration ("*degree*C*" s)")) +
   xlab("Biomass height ratio") + 
   scale_color_manual(values=colpalette) +
   pubtheme.nogridlines + theme(legend.key.width = unit(0.5, "lines"),
@@ -280,7 +280,7 @@ ggplot(temp.base, aes(tdensity, crt.degsecb, color=sp.name)) +
   geom_point(data=degsecb.byspecies, size = ptsize+1, alpha=1, shape=16,
              aes(color=sp.name))+
   ylim(c(-200000, 200000)) +
-  ylab(expression("Mass corrected temperature integration ("*degree*C*".s)")) +
+  ylab(expression("Mass corrected temperature integration ("*degree*C*" s)")) +
   xlab(expression("Biomass density" ~(g~cm^{-3}))) + 
   scale_color_manual(values=colpalette) +
   pubtheme.nogridlines + theme(legend.key.width = unit(0.5, "lines"),
