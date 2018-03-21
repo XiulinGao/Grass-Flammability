@@ -51,6 +51,16 @@ flam.loss <- left_join(trials, flamlossr) %>%
 
 arc.trial <- left_join(trials, mass.density)
 
+#4.missing data occured for different measuremetns of different trials,
+# PCA need two seperate datasets which contains all obtained flammability measurements
+# but only temp. measurements at either base or above soil surface 
+
+pcadata.above <- left_join(trials, flam.loss) %>% left_join(temp.above) %>%
+  select(mconsum, massloss, degsec, dur, lossrate, max.fh, ignition, combustion)
+
+pcadata.base <- left_join(trials, flam.loss) %>% left_join(temp.base) %>%
+  select(mconsum, massloss, degsec, dur,lossrate, max.fh, ignition, combustion)
+
 #clean up dataset not needed
 rm("balance_data", "balance_sum", "bytrial", "flamburn", "flambytrial", 
    "trials")
