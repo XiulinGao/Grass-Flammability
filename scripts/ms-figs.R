@@ -69,14 +69,12 @@ lnsize=0.8
 #results kept same if PCA is done with temp measurements
 #at soil surface
 
-#flamabove.PCA <- temp.above %>%
-  #select ( dur, lossrate, mconsum, degsec) %>% 
-  #pca(nPcs = 4, method="ppca",center=TRUE,scale="uv")
+flamabove.PCA <- pcadata.above %>%
+  select ( dur, lossrate, massloss, degsec) %>% 
+  pca(nPcs = 4, method="ppca", seed = 100, center=TRUE,scale="uv")
 
-# save PCA results to solve the flipping-sign issue
-#save (flamabove.PCA, file="../results/flamabove_PCA.rda")
-#load PCA result
-load("../results/flamabove_PCA.rda")
+biplot(flamabove.PCA)
+summary(flamabove.PCA)
 
 #extract pca loading and score for biplot
 flamabove.loads <- as.data.frame(loadings(flamabove.PCA))
@@ -124,19 +122,16 @@ flamabove.loads <- transform(flamabove.loads,
 
 ## adjust text coordinate for each variable name to avoid overlap of
 ## text
-## sign of PCA scores flips, so text coordinate may not always apply
-## need to fix the issue
-
   text.cor <- flamabove.loads %>% select(v12, v2, v13, v3)
     text.cor$v12[1] <- text.cor$v12[1] + 0.15
-    text.cor$v12[2] <- text.cor$v12[2] + 0.15 
+    text.cor$v12[2] <- text.cor$v12[2] - 0.15 
     text.cor$v12[3] <- text.cor$v12[3] + 0.15
-    text.cor$v12[4] <- text.cor$v12[4] + 0.15
+    text.cor$v12[4] <- text.cor$v12[4] + 0.2
   
 
   ggplot()+
   geom_blank(data = flamabove.scores, aes(x=PC1, y=PC2)) +
-    #xlim(c(-3.0, 2)) + ylim (c(-4.5, 0)) +
+    xlim(c(-3.0, 2)) + ylim(c(0, 4.5)) +
   ylab("Principal component 2") +  xlab("Principal component 1") +
   geom_point(data = flamabove.loads, aes(x=v12, y=v2), shape=15,
              size=ptsize, color = "black")+
