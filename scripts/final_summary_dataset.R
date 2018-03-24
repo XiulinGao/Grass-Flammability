@@ -17,12 +17,11 @@ trials <- select(trials, -interval)
 trials.orga <- trials[order(trials$label), ]
 tempsec.sum <- select(tempsec.sum, -interval) 
 
-#1. data frame has temp summary for above ane below section, as well
-#as contain both flaming and smoldering biomass loss rate, trial records
-#and canopy
+#1. data frame has temp summary for above ane below section, trial records
+#and canopy traits
 
-temp.alldata <- left_join(trials, tempsec.sum) %>% 
-  left_join(flamlossr) %>% left_join(mass.density)
+temp.alldata <- left_join(trials, mass.density) %>% 
+left_join(tempsec.sum)
 
 temp.above <- temp.alldata %>% filter(location=="above.sec") %>%
   mutate(log.tmass=log(total.mass))
@@ -39,8 +38,8 @@ temp.base <- temp.alldata %>% filter(location=="base") %>%
 #this dataset can be used for analyze how traits influence mass loss rate
 #include mass loss rate for two different stages: flaming and smoldering
 
-flam.loss <- left_join(trials, flamlossr) %>% 
-  left_join(mass.density) %>% filter(! is.na(lossrate)) 
+flam.loss <- left_join(trials, mass.density) %>% 
+  left_join(flamlossr) %>% filter(! is.na(lossrate)) 
 
 #smog.loss <- left_join(fix.trials, smolderingModsCoef) %>%
   #left_join(mass.density) %>% filter(! is.na(lossrate)) 
