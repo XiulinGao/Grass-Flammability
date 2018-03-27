@@ -378,3 +378,25 @@ summary.tab <- summary.tab %>% rename("Species" = sp.name, "Shade tolerance" = s
                                       "Mass loss rate (s^-1)" = lossrate_mean)
 print(xtable(summary.tab, digits = c(0,0, 0, 2, 2, 3, 0, 0, 2, 2, 2, 3, 1, 1, 2)), 
       type="html",file="../results/tab1_species_summary.html")
+
+## final model tables
+## mratio effect on lower canopy heat release
+crtdegseca.mod.final <- mixed (crt.degseca ~ tdensity_s + tdensity_s:humidity_s +
+                               mratio_s + temp_s + (1|sp.name), 
+                             data=resca_degseca, REML=FALSE)
+
+print(xtable(anova(crtdegseca.mod.final)), type="html",
+      file="../results/anova-tab-degseca-final-mod.html")
+
+print(xtable(summary(crtdegseca.mod.final)$coefficients), type="html",
+      file="../results/coef-tab-degseca-final-mod.html")
+
+## density effect on surface heat release
+crtdegsecb.mod.final <- mixed(crt.degsecb ~ tdensity_s + mratio_s +
+                               humidity_s + temp_s + (1|sp.name),
+                             data=resca_degsecb, REML=FALSE)
+print(xtable(anova(crtdegsecb.mod.final)), type="html",
+      file="../results/anova-tab-degsecb-final-mod.html")
+
+print(xtable(summary(crtdegsecb.mod.final)$coefficients), type="html",
+      file="../results/coef-tab-degsecb-final-mod.html")
