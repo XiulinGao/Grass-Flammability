@@ -1,7 +1,8 @@
 ### ms-figs.R
 ### this R script is used to produce publication figures 
 ### showing significant fixed effect of plant traits
-### on flammability found in lmer-mods.R
+### on flammability found in lmer-mods.R and also model
+### anova and coefficient tables
 
 #library(grid)
 library(dplyr)
@@ -9,7 +10,7 @@ library(tidyr)
 library(pcaMethods)
 library(ggplot2)
 library(xtable)
-library(qwraps2)
+#library(qwraps2)
 
 source("./final_summary_dataset.R")
 source("./ggplot-theme.R")
@@ -173,7 +174,8 @@ ggsave("../results/Fig2_flam_biplot.pdf", width = col1, height = 0.9*col1, units
 ###### effect of biomass on temperature integration #######
 
 ##remove columns which are not needed 
-alldata <- temp.alldata %>% select (label, pair, sp.name, trial.date, trial.num,
+alldata <- temp.alldata %>% left_join(flam.loss) %>%
+  select (label, pair, sp.name, trial.date, trial.num,
                                     max.fh, total.mass, trial.id, utrial, mconsum,
                                     massloss, location, dur, degsec, lossrate,
                                     p.value, tdensity, mratio)
@@ -193,8 +195,8 @@ ggplot(aes(total.mass, degsec)) + geom_point(size=ptsize, shape=16) +
   facet_grid(. ~ location, labeller = labeller_replace) + 
   geom_smooth(method="lm", se=FALSE, size=lnsize,color="black") + 
   #remove obervations of 0 in plot
-  ylim(c(0.00001,350000)) + xlim(c(0, 200)) +
-  ylab(expression("Temperature integration ("*degree*C*" s)")) +
+  ylim(c(0.00001,350000)) + xlim(c(0, 212)) +
+  ylab(expression("Temperature integration ("*degree*C*".s)")) +
   xlab("Total above ground biomass (g)") + 
    pubtheme.nogridlines
 
@@ -211,9 +213,9 @@ zscore <- function(x) (x - mean(x)) / sd(x)
 resca_degseca <- temp.above %>% mutate_at(c("tdensity", "mratio","temp", "humidity"),
                                          funs(s = zscore(.)))
 
-crtdegseca.mod.final <- lmer(crt.degseca ~ tdensity_s*humidity_s + mratio_s + 
-                                 temp_s +  (1 | sp.name),
-                               data= resca_degseca, REML=FALSE)
+crtdegseca.mod.final <- lmer(crt.degseca ~ tdensity_s + tdensity_s:humidity_s +
+                                mratio_s + temp_s + (1|sp.name), 
+                              data=resca_degseca, REML=FALSE)
 
 ## predict degsec with scaled variables
 crtdegseca.predic <- resca_degseca %>% select(c(tdensity_s, temp_s, humidity_s, mratio_s, 
@@ -234,7 +236,7 @@ ggplot(temp.above, aes(mratio, crt.degseca, color=sp.name)) +
   geom_point(data=degseca.byspecies, size=ptsize+1, alpha=1, shape=16,
              aes(color=sp.name))+
   xlim(c(0, 6)) + ylim(c(-25000, 25000)) +
-  ylab(expression("Mass corrected temperature integration ("*degree*C*" s)")) +
+  ylab(expression("Mass corrected temperature integration ("*degree*C".s)")) +
   xlab("Biomass height ratio") + 
   scale_color_manual(values=colpalette) +
   pubtheme.nogridlines + theme(legend.key.width = unit(0.5, "lines"),
@@ -253,12 +255,14 @@ temp.base$crt.degsecb <- residuals(tmdegsecbLM)
 ## best model fit with z-scored predictors
 resca_degsecb <- temp.base %>% mutate_at(c("tdensity", "temp", "humidity", "mratio"),
                                          funs(s = zscore(.)))
-crtdegsecb.mod.final <- lmer(crt.degsecb ~ tdensity_s + humidity_s + temp_s +
-                               (1|sp.name),data=resca_degsecb, REML=FALSE)
+crtdegsecb.mod.final <- lmer(crt.degsecb ~ tdensity_s + mratio_s +
+                               humidity_s + temp_s + (1|sp.name),
+                             data=resca_degsecb, REML=FALSE)
 
 ## predict degsec with scaled variables
-crtdegsecb.predic <- resca_degsecb %>% select(c(tdensity_s, temp_s, humidity_s, sp.name, 
-                                                tdensity))
+crtdegsecb.predic <- resca_degsecb %>% select(c(tdensity_s, mratio_s, 
+                  temp_s, humidity_s, sp.name, tdensity))
+
 crtdegsecb.predic$crt.degsecb <- predict(crtdegsecb.mod.final, 
                                          newdata = crtdegsecb.predic)
 ## only keep tdensity (unscaled) and fitted degsec 
@@ -275,7 +279,7 @@ ggplot(temp.base, aes(tdensity, crt.degsecb, color=sp.name)) +
   geom_point(data=degsecb.byspecies, size = ptsize+1, alpha=1, shape=16,
              aes(color=sp.name))+
   ylim(c(-200000, 200000)) +
-  ylab(expression("Mass corrected temperature integration ("*degree*C*" s)")) +
+  ylab(expression("Mass corrected temperature integration ("*degree*C*".s)")) +
   xlab(expression("Biomass density" ~(g~cm^{-3}))) + 
   scale_color_manual(values=colpalette) +
   pubtheme.nogridlines + theme(legend.key.width = unit(0.5, "lines"),
@@ -288,50 +292,11 @@ ggsave("../results/Fig5_temp_density.pdf", width = col1, height= 0.9*col1,
 ##### total biomass effect on max. mass loss rate ######
 ggplot(flam.loss, aes(total.mass, lossrate)) + geom_point(size=ptsize, shape=16) +
   geom_smooth(method="lm", se=FALSE, size=lnsize, color="black") +
-  xlim(c(0, 220)) + ylim(c(0, 0.15)) +
+  xlim(c(0, 212)) + ylim(c(0, 0.15)) +
   ylab(expression("Maximum mass loss rate" ~ (s^{-1}))) +
   xlab("Total above ground biomass (g)") + pubtheme.nogridlines
 
 ggsave("../results/Fig6_lossrate_biomass.pdf", width = col1, height= 0.9*col1, 
-       units="cm")
-
-####### effect of biomass density on mass-corrected biomass loss rate ########
-
-## residuals of mass-loss rate model
-lossr.lmod <- lm(lossrate ~ total.mass, data=flam.loss)
-flam.loss$crt.lossr <- residuals(lossr.lmod)
-
-## best model fit with z-scored variables
-resca_lossr <- flam.loss %>% mutate_at(c("tdensity", "mratio", "humidity", "temp"),
-                                       funs(s = zscore(.)))
-crtlossr.mod.final <- lmer (crt.lossr ~ tdensity_s + (1|sp.name), 
-                         data=resca_lossr, REML=FALSE)
-
-## predict max. loss rate with scaled variable
-crtlossr.predic <- resca_lossr %>% select(c(tdensity_s, sp.name, tdensity))
-crtlossr.predic$crt.lossr <- predict(crtlossr.mod.final, 
-                                         newdata = crtlossr.predic)
-## only keep tdensity (unscaled) and fitted loss rate 
-crtlossr.predic <- select(crtlossr.predic, tdensity, crt.lossr, sp.name)
-
-## species mean of density and mass-corrected loss rate
-lossr.byspecies <- flam.loss %>% group_by(sp.name)%>%
-  summarize(tdensity = mean(tdensity),crt.lossr = mean(crt.lossr))
-
-ggplot(flam.loss, aes(tdensity, crt.lossr, color=sp.name)) +
-  geom_point(size=ptsize, alpha=0.6, shape=16) + 
-  geom_blank(data=crtlossr.predic) + 
-  geom_smooth(method="lm", se=FALSE, size=lnsize, color="black") +
-  geom_point(data=lossr.byspecies, size=ptsize+1, alpha=1,shape=16,
-             aes(color=sp.name))+
-  xlim(c(0, 0.006))+ ylim(c(-0.05, 0.05))+
-  ylab(expression("Mass corrected mass loss rate" ~(s^{-1}))) +
-  xlab(expression("Biomass density" ~(g~cm^{-3}))) + 
-  scale_color_manual(values=colpalette) +
-  pubtheme.nogridlines + theme(legend.key.width = unit(0.5,"lines"),
-                               legend.position = "bottom",
-                               legend.title = element_blank())
-ggsave("../results/Fig7_lossrate_density.pdf", width = col1, height= 0.9*col1, 
        units="cm")
 
 ###### effect of total biomass on maximum flame height  #######
@@ -359,50 +324,57 @@ ggsave("../results/Fig7_lossrate_density.pdf", width = col1, height= 0.9*col1,
 
 ##### Table of species name, shade tolerance and species mean of measurements #####
 
-summary.data <- temp.alldata %>% select ( sp.name, shade.tolerance, total.mass, 
-                                          tdensity, mratio, location, degsec, 
-                                          lossrate) %>% spread(location, degsec)
+summary.data <- temp.alldata %>% left_join(flam.loss) %>%
+  select ( sp.name, shade.tolerance, total.mass,tdensity, 
+           mratio, location, degsec,lossrate) %>% 
+  spread(location, degsec)
 # dorp the "NA" column
 summary.data <- summary.data[, -9]
 # join observation with biomass-predicted measurements
-mod <- lm(degsec ~ total.mass, data=temp.above)
-mod2 <- lm(degsec ~ total.mass, data=temp.base)
-mod3 <- lm(lossrate ~ total.mass, data=flam.loss)
-temp25 <- temp.above %>% select(sp.name, shade.tolerance, utrial,total.mass) %>%
-                                mutate(prdc.degsec25 = predict(mod, newdata=.))
-tempb <- temp.base %>% select (sp.name, shade.tolerance, utrial,total.mass) %>%
-  mutate(prdc.degsec = predict(mod2, newdata=.))
-lossr <- flam.loss %>% select (sp.name, shade.tolerance, utrial,total.mass) %>%
-  mutate(prdc.lossr = predict(mod3, newdata=.))
+#mod <- lm(degsec ~ total.mass, data=temp.above)
+#mod2 <- lm(degsec ~ total.mass, data=temp.base)
+#mod3 <- lm(lossrate ~ total.mass, data=flam.loss)
+#temp25 <- temp.above %>% select(sp.name, shade.tolerance, utrial,total.mass) %>%
+                                #mutate(prdc.degsec25 = predict(mod, newdata=.))
+#tempb <- temp.base %>% select (sp.name, shade.tolerance, utrial,total.mass) %>%
+  #mutate(prdc.degsec = predict(mod2, newdata=.))
+#lossr <- flam.loss %>% select (sp.name, shade.tolerance, utrial,total.mass) %>%
+  #mutate(prdc.lossr = predict(mod3, newdata=.))
 
 # join observation with predict data
-summary.data <- summary.data %>% left_join(temp25) %>% left_join(tempb) %>%
-  left_join(lossr)
+#summary.data <- summary.data %>% left_join(temp25) %>% left_join(tempb) %>%
+  #left_join(lossr)
 # summarize species mean of measurements, also can use qwraps2::summary_table
+# first get shade tolerance tab
+shad.char <- summary.data %>% group_by (sp.name) %>% 
+  summarize( shade.tolerance = shade.tolerance[1])
+# get specie mean of each measurements
 summary.tab <- summary.data %>% group_by (sp.name) %>% 
-  summarize( shade.tolerance = shade.tolerance[1],
-        # use qwraps2::mean_sd function to get mean and standard deviation
-        mean.tm = mean_sd(total.mass, digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),  
-        mean.mhr= mean_sd(mratio,digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),
-        mean.den = mean_sd(tdensity, digits = 4, denote_sd = "paren", show_n ="never",na_rm=TRUE),
-        mean.degsec = mean_sd(base, digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),
-        prdc.degsec = mean_sd(prdc.degsec, digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),
-        mean.degsec25 = mean_sd(above.sec, digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),
-        prdc.degsec25 = mean_sd(prdc.degsec25, digits = 2, denote_sd = "paren", show_n ="never", na_rm=TRUE),
-        mean.lossr = mean_sd(lossrate, digits = 3, denote_sd = "paren", show_n ="never", na_rm=TRUE),
-        prdc.lossr = mean_sd(prdc.lossr, digits = 3, denote_sd = "paren", show_n ="never", na_rm=TRUE))
-summary.tab
+  summarize_at ( c("total.mass", "mratio", "tdensity", "above.sec", "base", 
+                   "lossrate"),
+    funs(mean = mean(., na.rm = TRUE), sd = sd(., na.rm = TRUE)) 
+) 
+
+summary.tab <- left_join (shad.char, summary.tab)  
+#clean significant digites in temp mean 
+#and decimal places in other measurements
+summary.tab <- summary.tab %>% 
+mutate_at(c("above.sec_mean","base_mean", "above.sec_sd", "base_sd"), 
+          funs(signif(.,5))) %>%
+  mutate_at (c("total.mass_mean", "mratio_mean", "total.mass_sd", "mratio_sd",
+               "lossrate_mean", "lossrate_sd"),
+             funs(round(.,2))) %>%
+  mutate_at (c("tdensity_mean", "tdensity_sd"),
+             funs(round(.,3)))
 # rename column
 summary.tab <- summary.tab %>% rename("Species" = sp.name, "Shade tolerance" = shade.tolerance,
-                                      "Total mass" = mean.tm, "Biomass height ratio" = mean.mhr,
-                                      "Density" = mean.den, 
-                                      "Temperature integration (0cm)" = mean.degsec,
-                                      "Predict temperature integration (0cm)" = prdc.degsec,
-                                      "Temperature integration (25cm)" = mean.degsec25,
-                                      "Predict temperature integration (25cm)" = prdc.degsec25,
-                                      "Mass loss rate" = mean.lossr,
-                                      "Predict mass loss rate" = prdc.lossr)
-
-print(xtable(summary.tab, digits = c(0,0, 0, 2, 2, 4, 2, 2, 2, 2, 3, 3)),
-      type="html", file="../results/tab1_species_summary.html")
-# looks funny and may be too large to include in manuscript, as appedix?
+                                      "Total mass (g)" = total.mass_mean, 
+                                      "Biomass height ratio" = mratio_mean,
+                                      "Density (g cm^-3)" = tdensity_mean, 
+                                      "Canopy temperature integration (°C.s)" = above.sec_mean,
+                                      #"Predict temperature integration (0cm)" = prdc.degsec,
+                                      "Surface temperature integration (°C.s)" = base_mean,
+                                      #"Predict temperature integration (25cm)" = prdc.degsec25,
+                                      "Mass loss rate (s^-1)" = lossrate_mean)
+print(xtable(summary.tab, digits = c(0,0, 0, 2, 2, 3, 0, 0, 2, 2, 2, 3, 1, 1, 2)), 
+      type="html",file="../results/tab1_species_summary.html")
