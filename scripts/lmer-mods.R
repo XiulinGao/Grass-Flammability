@@ -4,12 +4,12 @@
 ### effect
 
 library(lme4)
-   #library(AICcmodavg)
+#library(AICcmodavg)
 library(afex)
 #library(MuMIn)
 library(pcaMethods)
 library(xtable)
-library(MASS)
+#library(MASS)
 
 # Look for additional grass trait that may influence flammability besides total biomass.
 # Steps are as follows:
@@ -44,7 +44,7 @@ color <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442",
 
 flamabove.PCA <- pcadata.above %>%
   select (dur, lossrate, massloss, degsec) %>% 
-  pca(nPcs=4, method="ppca",center=TRUE,scale="uv")
+  pca(nPcs=4, method="ppca",seed=100, center=TRUE,scale="uv")
 summary(flamabove.PCA) 
 loadings(flamabove.PCA)
 ## total heat release and rate of heat release are independent axes
@@ -175,9 +175,12 @@ vif.mer(crtdegseca.mod.simple) ## keep both
 crtdegseca.mod.simple <- mixed(crt.degseca ~ humidity_s* tdensity_s + mratio_s +
                               temp_s + (1 | sp.name),
                             data= resca_degseca, REML=FALSE)
-anova(crtdegseca.mod.simple)
-print(xtable(anova(crtdegseca.mod.simple)))
-print(xtable(summary(crtdegseca.mod.simple)$coefficients))
+anova(crtdegseca.mod.simple) # take out humidity fixed effect
+crtdegseca.mod.final <- mixed(crt.degseca ~ tdensity_s + tdensity_s:humidity_s +
+                                mratio_s + temp_s + (1|sp.name), 
+                              data=resca_degseca, REML=FALSE)
+print(xtable(anova(crtdegseca.mod.final)))
+print(xtable(summary(crtdegseca.mod.final)$coefficients))
 
 ## Note: temperature integration (>100 degree) above 10cm location was positively 
 ## influenced by total biomass, negatively influenced by biomass ratio
@@ -367,10 +370,13 @@ crtlossr.mod.simple <- mixed (crt.lossr ~ tdensity_s + mratio_s + humidity_s +
                              temp_s + (1|sp.name),
                            data=resca_lossr, REML=FALSE)
 anova(crtlossr.mod.simple) 
-## marginally significant effect of density
+## marginally significant effect of density, drop non-sig. humidity and temp
 
-print(xtable(anova(crtlossr.mod.simple)))
-print(xtable(summary(crtlossr.mod.simple)$coefficients))
+crtlossr.mod.final <- mixed(crt.lossr ~ tdensity_s + mratio_s +
+                              (1|sp.name), data = resca_lossr, REML=FALSE)
+
+print(xtable(anova(crtlossr.mod.final)))
+print(xtable(summary(crtlossr.mod.final)$coefficients))
 ## Note: maximum biomass loss rate is negatively influenced by
 ## total mass (logged) only 
 
