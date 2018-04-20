@@ -10,6 +10,7 @@ library(tidyr)
 library(pcaMethods)
 library(ggplot2)
 library(xtable)
+library(afex)
 #library(qwraps2)
 
 source("./final_summary_dataset.R")
@@ -21,45 +22,6 @@ colpalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
                 "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ptsize=1.5
 lnsize=0.8
-
-# Multiple plot function
-
-# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
-# - cols: Number of columns in layout
-# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
-#
-# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
-# then plot 1 will go in the upper left, 2 will go in the upper right, and
-# 3 will go all the way across the bottom.
-
-#multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  #require(grid)
-  # Make a list from the ... arguments and plotlist
-  #plots <- c(list(...), plotlist)
-  #numPlots = length(plots)
-  # If layout is NULL, then use 'cols' to determine layout
-  #if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    #layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     #ncol = cols, nrow = ceiling(numPlots/cols))
-  #}
-  #if (numPlots==1) {
-    #print(plots[[1]])
-  #} else {
-    # Set up the page
-    #grid.newpage()
-    #pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    # Make each plot, in the correct location
-    #for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      #matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      #print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      #layout.pos.col = matchidx$col))
-    #}
-  #}
-#}
 
 ############ Principal component analysis of flammability data ############
 ## biplot of PCA with ggplot2
@@ -73,7 +35,7 @@ lnsize=0.8
 flamabove.PCA <- pcadata.above %>%
   select ( dur, lossrate, massloss, degsec) %>% 
   pca(nPcs = 4, method="ppca", seed = 100, center=TRUE,scale="uv")
-
+# warning message due to the number of PCs, need to check
 biplot(flamabove.PCA)
 summary(flamabove.PCA)
 
@@ -142,35 +104,6 @@ flamabove.loads <- transform(flamabove.loads,
   
 ggsave("../results/Fig2_flam_biplot.pdf", width = col1, height = 0.9*col1, units="cm")
                               
-## plot PC3 against PC1
-## adjust text position of each variable name to avoid overlap of
-## labels
- 
- #text.cor$v13[1] <- text.cor$v13[1] - 0.1
- #text.cor$v13[2] <- text.cor$v13[2] + 0.1 
- #text.cor$v13[3] <- text.cor$v13[3] - 0.1
- #text.cor$v13[4] <- text.cor$v13[4] - 0.1
- #text.cor$v13[5] <- text.cor$v13[5] - 0.1
- 
-#p2 <- ggplot()+
-  #geom_blank(data = flamabove.scores, aes(x=PC1, y=PC3)) +
-  #labs(x="Principal component 1", y="Principal component 3") + 
-  #xlim(c(-2.5, 2.5)) + ylim (c(-2, 2.0)) +
-  #geom_point(data = flamabove.loads, aes(x=v13, y=v3), shape=15,
-             #size=ptsize, color = "black")+
-  #geom_text(data = text.cor, aes(x=v13, y=v3, label=varnames),
-            #size = 6, vjust=0.5, hjust= "inward", color="black") +
-  #pubtheme.nogridlines + theme(legend.position = "none", 
-                               #axis.text.x = element_text(size=textsize+6),
-                               #axis.text.y = element_text(size=textsize+6),
-                               #axis.title.x = element_text(size=textsize+12),
-                               #axis.title.y = element_text(size=textsize+12))
-## combine p1 and p2 as one figure
-
-#pdf("../results/fig1_biplot.pdf", width=col1, height=0.9 * col1)
-#multiplot(p1, p2)
-#dev.off()
-
 ###### effect of biomass on temperature integration #######
 
 ##remove columns which are not needed 
@@ -195,48 +128,46 @@ ggplot(aes(total.mass, degsec)) + geom_point(size=ptsize, shape=16) +
   facet_grid(. ~ location, labeller = labeller_replace) + 
   geom_smooth(method="lm", se=FALSE, size=lnsize,color="black") + 
   #remove obervations of 0 in plot
-  ylim(c(0.00001,350000)) + xlim(c(0, 212)) +
+  #ylim(c(0.00001,350000)) + xlim(c(0, 212)) +
   ylab(expression("Temperature integration ("*degree*C*".s)")) +
   xlab("Total above ground biomass (g)") + 
    pubtheme.nogridlines
 
 ggsave("../results/Fig3_duration_biomass.pdf", width = col1, height = 0.9*col1, units="cm")
 
-###### effect of biomass ratio on biomass corrected temp integration at 25 cm ######
+###### effect of biomass height ratio on temp integration at soil surface ######
 
-## residuals of biomass-degsec at 25cm
-tmdegsecaLM <- lm(degsec ~ total.mass, data=temp.above)
-temp.above$crt.degseca <- residuals(tmdegsecaLM)
-
+## residuals of biomass-degsec at soil surface
+tmdegsecbLM <- lm(degsec ~ total.mass, data=temp.base)
+temp.base$crt.degsecb <- residuals(tmdegsecbLM)
 ## best model fit with z-scored variables
 zscore <- function(x) (x - mean(x)) / sd(x) 
-resca_degseca <- temp.above %>% mutate_at(c("tdensity", "mratio","temp", "humidity"),
+
+resca_degsecb <- temp.base %>% mutate_at(c("tdensity", "temp", "humidity", "mratio"),
                                          funs(s = zscore(.)))
-
-crtdegseca.mod.final <- lmer(crt.degseca ~ tdensity_s + tdensity_s:humidity_s +
-                                mratio_s + temp_s + (1|sp.name), 
-                              data=resca_degseca, REML=FALSE)
-
+crtdegsecb.mod.final <- lmer(crt.degsecb ~ tdensity_s*mratio_s + 
+                                humidity_s + (1 | sp.name), 
+                              data = resca_degsecb, REML=FALSE)
 ## predict degsec with scaled variables
-crtdegseca.predic <- resca_degseca %>% select(c(tdensity_s, temp_s, humidity_s, mratio_s, 
-                                                sp.name, mratio))
-crtdegseca.predic$crt.degseca <- predict(crtdegseca.mod.final, 
-                                         newdata = crtdegseca.predic)
+crtdegsecb.predic <- resca_degsecb %>% select(c(tdensity_s, mratio_s, 
+                  humidity_s, sp.name, mratio))
+
+crtdegsecb.predic$crt.degsecb <- predict(crtdegsecb.mod.final, 
+                                         newdata = crtdegsecb.predic)
 ## only keep mratio (unscaled) and fitted degsec 
-crtdegseca.predic <- select(crtdegseca.predic, mratio, crt.degseca, sp.name)
+crtdegsecb.predic <- select(crtdegsecb.predic, mratio, crt.degsecb, sp.name)
 
-## species mean of density and mass-corrected temp integration >10cm
-degseca.byspecies <- temp.above %>% group_by(sp.name) %>%
-  summarize(mratio = mean(mratio), crt.degseca = mean(crt.degseca))
+## species mean of mratio and mass-corrected temp integration
+degsecb.byspecies <- temp.base %>% group_by(sp.name) %>%
+  summarize(mratio = mean(mratio), crt.degsecb = mean(crt.degsecb))
 
-ggplot(temp.above, aes(mratio, crt.degseca, color=sp.name)) + 
-  geom_point(size=ptsize, alpha=0.6, shape=16) + 
-  geom_blank(data=crtdegseca.predic) +
-  geom_smooth(method="lm", se=FALSE, size=lnsize, color="black") +
-  geom_point(data=degseca.byspecies, size=ptsize+1, alpha=1, shape=16,
+ggplot(temp.base, aes(mratio, crt.degsecb, color=sp.name)) + 
+  geom_point(size=ptsize, alpha=0.5, shape=16) + 
+  geom_blank(data = crtdegsecb.predic) + 
+  geom_smooth(method = "lm", se = FALSE, size=lnsize, color = "black") +
+  geom_point(data=degsecb.byspecies, size = ptsize+1, alpha=1, shape=16,
              aes(color=sp.name))+
-  xlim(c(0, 6)) + ylim(c(-25000, 25000)) +
-  ylab(expression("Mass corrected temperature integration ("*degree*C".s)")) +
+  ylab(expression("Mass corrected temperature integration ("*degree*C*".s)")) +
   xlab("Biomass height ratio") + 
   scale_color_manual(values=colpalette) +
   pubtheme.nogridlines + theme(legend.key.width = unit(0.5, "lines"),
@@ -246,81 +177,15 @@ ggplot(temp.above, aes(mratio, crt.degseca, color=sp.name)) +
 ggsave("../results/Fig4_temp_mratio.pdf", width = col1, height= 0.9*col1, 
        units="cm")
 
-###### effect of biomass density on mass-corrected temp integration at soil surface ######
-
-## residuals of biomass-degsec at soil surface
-tmdegsecbLM <- lm(degsec ~ total.mass, data=temp.base)
-temp.base$crt.degsecb <- residuals(tmdegsecbLM)
-
-## best model fit with z-scored predictors
-resca_degsecb <- temp.base %>% mutate_at(c("tdensity", "temp", "humidity", "mratio"),
-                                         funs(s = zscore(.)))
-crtdegsecb.mod.final <- lmer(crt.degsecb ~ tdensity_s + mratio_s +
-                               humidity_s + temp_s + (1|sp.name),
-                             data=resca_degsecb, REML=FALSE)
-
-## predict degsec with scaled variables
-crtdegsecb.predic <- resca_degsecb %>% select(c(tdensity_s, mratio_s, 
-                  temp_s, humidity_s, sp.name, tdensity))
-
-crtdegsecb.predic$crt.degsecb <- predict(crtdegsecb.mod.final, 
-                                         newdata = crtdegsecb.predic)
-## only keep tdensity (unscaled) and fitted degsec 
-crtdegsecb.predic <- select(crtdegsecb.predic, tdensity, crt.degsecb, sp.name)
-
-## species mean of density and mass-corrected temp integration
-degsecb.byspecies <- temp.base %>% group_by(sp.name) %>%
-  summarize(tdensity = mean(tdensity), crt.degsecb = mean(crt.degsecb))
-
-ggplot(temp.base, aes(tdensity, crt.degsecb, color=sp.name)) + 
-  geom_point(size=ptsize, alpha=0.6, shape=16) + 
-  geom_blank(data = crtdegsecb.predic) + 
-  geom_smooth(method = "lm", se = FALSE, size=lnsize, color = "black") +
-  geom_point(data=degsecb.byspecies, size = ptsize+1, alpha=1, shape=16,
-             aes(color=sp.name))+
-  ylim(c(-200000, 200000)) +
-  ylab(expression("Mass corrected temperature integration ("*degree*C*".s)")) +
-  xlab(expression("Biomass density" ~(g~cm^{-3}))) + 
-  scale_color_manual(values=colpalette) +
-  pubtheme.nogridlines + theme(legend.key.width = unit(0.5, "lines"),
-                               legend.position = "bottom",
-                               legend.title = element_blank())
-
-ggsave("../results/Fig5_temp_density.pdf", width = col1, height= 0.9*col1, 
-       units="cm")
-
 ##### total biomass effect on max. mass loss rate ######
 ggplot(flam.loss, aes(total.mass, lossrate)) + geom_point(size=ptsize, shape=16) +
   geom_smooth(method="lm", se=FALSE, size=lnsize, color="black") +
-  xlim(c(0, 212)) + ylim(c(0, 0.15)) +
   ylab(expression("Maximum mass loss rate" ~ (s^{-1}))) +
   xlab("Total above ground biomass (g)") + pubtheme.nogridlines
 
-ggsave("../results/Fig6_lossrate_biomass.pdf", width = col1, height= 0.9*col1, 
+ggsave("../results/Fig5_lossrate_biomass.pdf", width = col1, height= 0.9*col1, 
        units="cm")
 
-###### effect of total biomass on maximum flame height  #######
-
-### non-linear model 
-#maxfh.nlmod <- nls(max.fh ~ a*total.mass/ (total.mass+b), data=arc.trial, 
-                   #start=list(a=100, b=5)) 
-#arc.trial <- arc.trial %>% mutate(fh.prdt = predict(maxfh.nlmod, newdata=arc.trial))
-
-### plot predict data with observation
-#ggplot(arc.trial, aes(total.mass, max.fh)) + 
-  #geom_point(size=ptsize, alpha=0.8) + xlim(c(0, 250)) +
-  #ylab("Maximum flame height (cm)") +
-  #xlab("Total above ground biomass (g)") + pubtheme.nogridlines + 
-  #geom_line(aes(total.mass, fh.prdt), size=lnsize, color="black") 
-#ggplot(arc.trial, aes(logtmass, max.fh)) +
-  #geom_point(size=ptsize, alpha=0.8) + 
-  #geom_smooth(method="lm", se=FALSE, size=lnsize, color="black")+
-  #xlab("Log transformed total above ground biomass") +
-  #ylab("Maximum flame height (cm)") +
-  #pubtheme.nogridlines
-
-#ggsave("../results/fig8_maxfh_biomass.pdf", width = col1, height= 0.9*col1, 
-       #units="cm")
 
 ##### Table of species name, shade tolerance and species mean of measurements #####
 
@@ -345,10 +210,11 @@ summary.data <- summary.data[, -9]
 #summary.data <- summary.data %>% left_join(temp25) %>% left_join(tempb) %>%
   #left_join(lossr)
 # summarize species mean of measurements, also can use qwraps2::summary_table
-# first get shade tolerance tab
+
+## first get shade tolerance tab
 shad.char <- summary.data %>% group_by (sp.name) %>% 
   summarize( shade.tolerance = shade.tolerance[1])
-# get specie mean of each measurements
+## get specie mean of each measurements
 summary.tab <- summary.data %>% group_by (sp.name) %>% 
   summarize_at ( c("total.mass", "mratio", "tdensity", "above.sec", "base", 
                    "lossrate"),
@@ -356,8 +222,8 @@ summary.tab <- summary.data %>% group_by (sp.name) %>%
 ) 
 
 summary.tab <- left_join (shad.char, summary.tab)  
-#clean significant digites in temp mean 
-#and decimal places in other measurements
+##clean significant digites in temp mean 
+##and decimal places in other measurements
 summary.tab <- summary.tab %>% 
 mutate_at(c("above.sec_mean","base_mean", "above.sec_sd", "base_sd"), 
           funs(signif(.,5))) %>%
@@ -365,8 +231,8 @@ mutate_at(c("above.sec_mean","base_mean", "above.sec_sd", "base_sd"),
                "lossrate_mean", "lossrate_sd"),
              funs(round(.,2))) %>%
   mutate_at (c("tdensity_mean", "tdensity_sd"),
-             funs(round(.,3)))
-# rename column
+             funs(round(.,4)))
+## rename column
 summary.tab <- summary.tab %>% rename("Species" = sp.name, "Shade tolerance" = shade.tolerance,
                                       "Total mass (g)" = total.mass_mean, 
                                       "Biomass height ratio" = mratio_mean,
@@ -376,14 +242,42 @@ summary.tab <- summary.tab %>% rename("Species" = sp.name, "Shade tolerance" = s
                                       "Surface temperature integration (°C.s)" = base_mean,
                                       #"Predict temperature integration (25cm)" = prdc.degsec25,
                                       "Mass loss rate (s^-1)" = lossrate_mean)
-print(xtable(summary.tab, digits = c(0,0, 0, 2, 2, 3, 0, 0, 2, 2, 2, 3, 1, 1, 2)), 
+print(xtable(summary.tab, digits = c(0,0, 0, 2, 2, 4, 0, 0, 2, 2, 2, 4, 1, 1, 2)), 
       type="html",file="../results/tab1_species_summary.html")
 
-## final model tables
-## mratio effect on lower canopy heat release
-crtdegseca.mod.final <- mixed (crt.degseca ~ tdensity_s + tdensity_s:humidity_s +
-                               mratio_s + temp_s + (1|sp.name), 
-                             data=resca_degseca, REML=FALSE)
+## model tables
+### biomass effect on flammability ###
+degseca.lmod <- lm(degsec ~ total.mass, data=temp.above)
+
+print(xtable(anova(degseca.lmod)), type = "html", 
+      file = "../results/anova-tab-mass-tempa-mod.html")
+print(xtable(summary(degseca.lmod)$coefficients), type = "html", 
+      file = "../results/coef-tab-mass-tempa-mod.html")
+
+degsecb.lmod <- lm(degsec ~ total.mass, data=temp.base)
+
+print(xtable(anova(degsecb.lmod)), type = "html", 
+      file = "../results/anova-tab-mass-tempb-mod.html")
+print(xtable(summary(degsecb.lmod)$coefficients), type = "html", 
+      file = "../results/coef-tab-mass-tempb-mod.html")
+
+lossr.lmod <- lm(lossrate ~ total.mass, data=flam.loss)
+
+print(xtable(anova(lossr.lmod)), type = "html", 
+      file = "../results/anova-tab-mass-lossr-mod.html")
+print(xtable(summary(lossr.lmod)$coefficients), type = "html", 
+      file = "../results/coef-tab-mass-lossr-mod.html")
+
+### final model of traits effects on flammability ###
+
+##traits effect on temperature integration above soil surface
+## take residuals and rescal variable
+temp.above$crt.degseca <- residuals(degseca.lmod)
+resca_degseca <- temp.above %>% mutate_at(c("tdensity", "mratio", "humidity"),
+                                          funs(s = zscore(.)))
+crtdegseca.mod.final <- mixed(crt.degseca ~ mratio_s*tdensity_s + 
+                                 humidity_s + (1 + humidity_s | sp.name), 
+                               data= resca_degseca, REML=FALSE)            
 
 print(xtable(anova(crtdegseca.mod.final)), type="html",
       file="../results/anova-tab-degseca-final-mod.html")
@@ -391,12 +285,30 @@ print(xtable(anova(crtdegseca.mod.final)), type="html",
 print(xtable(summary(crtdegseca.mod.final)$coefficients), type="html",
       file="../results/coef-tab-degseca-final-mod.html")
 
-## density effect on surface heat release
-crtdegsecb.mod.final <- mixed(crt.degsecb ~ tdensity_s + mratio_s +
-                               humidity_s + temp_s + (1|sp.name),
-                             data=resca_degsecb, REML=FALSE)
+##traits effect on temperature integration at soil surface 
+
+crtdegsecb.mod.final <- mixed(crt.degsecb ~ tdensity_s*mratio_s + 
+                               humidity_s + (1 | sp.name), 
+                             data = resca_degsecb, REML=FALSE)
+
 print(xtable(anova(crtdegsecb.mod.final)), type="html",
       file="../results/anova-tab-degsecb-final-mod.html")
 
 print(xtable(summary(crtdegsecb.mod.final)$coefficients), type="html",
       file="../results/coef-tab-degsecb-final-mod.html")
+
+##traits effect on maximum biomass loss rate
+# obtain residuals and rescale predictors first
+
+flam.loss$crt.lossr <- residuals(lossr.lmod)
+resca_lossr <- flam.loss %>% mutate_at(c("tdensity", "mratio", "humidity", "temp"),
+                                       funs(s = zscore(.)))
+# mod and summary table
+crtlossr.mod.final <- mixed(crt.lossr ~ mratio_s*tdensity_s +
+                              + humidity_s + (1|sp.name),
+                            data=resca_lossr, REML=FALSE)
+print(xtable(anova(crtlossr.mod.final), digits = c(0,0,3,3,3)), type="html",
+      file="../results/anova-tab-lossr-final-mod.html")
+
+print(xtable(summary(crtlossr.mod.final)$coefficients, digits = c(0,3,3,3)), 
+      type="html",file="../results/coef-tab-lossr-final-mod.html")
