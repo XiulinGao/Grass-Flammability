@@ -1,8 +1,8 @@
-###clean_up_trial.R
-###this scrips is excused to clean up recorded trial data
-###main mission is to drop failed duplicated trial and also
-###do basic summary for each trial: time duration for each burn
-###total above ground biomass.
+## clean_up_trial.R
+
+## this script cleans up recorded trial data ("/data/2016-burns.csv"). The main
+## mission is to drop failed duplicated trials and also do a basic summary for
+## each trial: time duration for each burn and total above ground biomass.
 
 library(dplyr)
 library(lubridate)
@@ -50,7 +50,7 @@ trials$trial.num <- sapply(trials$trial.num, get_double_digit)
 #then get utrial
 trials <- trials %>% mutate(utrial = paste(label, trial.num, sep='-'))
 
-#fix ignition time NA issue by assiging average ignition time to NA
+#fix ignition time NA issue by assigning average ignition time to NA
 
 get_average_ignition <- function(ignition){
   for (i in 1:length(ignition)){
@@ -65,5 +65,8 @@ trials$ignition <- get_average_ignition(trials$ignition)
 trials$logtmass <- log10(trials$total.mass)
 trials <- trials %>% mutate(mconsum = total.mass-fuel.residual) %>%
   mutate(massloss = mconsum/total.mass)
+
 #clean up env
 rm("dropid", "n1", "n2", "get_average_ignition", "get_double_digit")
+
+## exports "trials" to the workspace. 

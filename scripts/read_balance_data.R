@@ -6,12 +6,10 @@ library(dplyr)
 library(ggplot2)
 library(stringr)
 
-#get data per trial
-
-source("./clean_up_trial.R")
 
 # read and clean a single balance file produced by serial-balance.py. See
-# https://github.com/schwilklab/serial-balance
+# https://github.com/schwilklab/serial-balance This function WRITES TO A GLOBAL
+# OBJECT, `trials` Make sure this dataframe exists before running
 read_balance_file <- function(filename) {
   bdf <- read.csv(filename, sep="\t", stringsAsFactors=FALSE)
   names(bdf) <- c("datet", "label", "nsec", "mass")
@@ -35,9 +33,10 @@ concat_csv_dir <- function(path) {
 }
 
 balance_data <- concat_csv_dir('../data/balance') %>% 
-  filter(!label=='ap01') #throw away ARPU9
+  filter(!label=='ap01') #throw away ARPU9 ## DWS: ???
 
-balance_data <- left_join(balance_data, trials) 
+balance_data <- left_join(balance_data,
+                          select(trials, label, sp.cd, sp.name, utrial, ignition, combustion, smoldering)) ## DWS: why duplicate so much data?
 #test <- balance_data %>% mutate(percent.loss = mass/balance.initial)
 
 balance_data <- balance_data %>%

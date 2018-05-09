@@ -71,8 +71,8 @@ arcmass <- predictmass %>% mutate(vol10 = pi*dia10^2 *10/4) %>%
   mutate(tdensity = total.mass/tvol) %>%
   mutate(ptmass = mass10 + mass)
   
-#clean up arcmass by dropping data that won't be used for later analysis
-mass.density <- arcmass %>% select( label, pair, treatment, sp.cd, sp.name,
+# clean up
+mass.density <- arcmass %>% select(label, # pair, treatment, sp.cd, sp.name,
                                      height, h.above10, mass10, mass, mratio,
                           density10, density, tdensity)
 #clean up env

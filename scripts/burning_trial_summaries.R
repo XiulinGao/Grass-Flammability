@@ -3,18 +3,19 @@
 
 library(broom)
 library(lme4)
-#library(brms) # Bayesian model fititng via stan and rstan
 library(dplyr)
 
-source("./read_balance_data.R")
-
+# get data per trial
+source("./clean_up_trial.R") # exports "trials" object
+source("./hobo-temps.R")  # read thermocouple data
+source("./read_balance_data.R") # retrieve balance data for mass loss rate
 
 # first, some very basic summary values per trial
 balance_sum <- balance_data %>% group_by(label, trial, utrial, sp.cd) %>%
   summarize(balance.initial = mean(mass[nsec<40]),
             balance.final = mean(mass[nsec > (max(nsec) - 10)]),
             balance.burned = balance.initial - balance.final) %>%
-            left_join(trials) %>% select(-interval)
+  left_join(trials)
 
 # plot to see how calculated biomass loss match to measured biomass loss during 
 # each burning trial

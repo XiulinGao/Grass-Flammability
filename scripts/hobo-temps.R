@@ -5,7 +5,8 @@ library(lubridate)
 library(stringr)
 library(tidyr)
 
-source("./clean_up_trial.R") #grab basic trial summary data
+#source("./clean_up_trial.R") #grab basic trial summary data
+## DWS: lets call this from parent script so it only gets called once
 
 read_hobo_file <- function(filename) {
     hobo <- read.csv(filename, skip=2, header=FALSE)
@@ -53,14 +54,14 @@ thermocouples.wide$base <- rowMeans(subset(thermocouples.wide, select= c(base.A,
 #thermocouples.wide$below.sec <- rowMeans(subset(thermocouples.wide, select=c(base, 
                                     #height.10)), na.rm = TRUE) 
 # since 10cm, 20cm and 40cm are correlated measurements, take avergae as canopy
-thermocouples.wide$above.sec <- rowMeans(subset(thermocouples.wide, select=c(height.10,
+thermocouples.wide$canopy <- rowMeans(subset(thermocouples.wide, select=c(height.10,
                                     height.20,height.40)), na.rm=TRUE)
 
 ## DWS: names here are confusing why is one "base" and one "above.sec". SHould
 ## be "base" and "canopy" or "below" and "above", yes?
 
 thermocouples.wide <- thermocouples.wide %>% mutate_at(c("base", 
-                                                         "above.sec"),funs(round(.,2)))
+                                                         "canopy"),funs(round(.,2)))
 thermocouples.wide <- thermocouples.wide[, -c(2:6)]#get rid off base.A, base.B
 
 ## get a trial ID from a time point
@@ -82,23 +83,30 @@ thermocouples.wide$trial.id <- unlist(sapply(thermocouples.wide$time, get_trial_
 # throw away data outside of a trial
 thermocouples.wide <- thermocouples.wide %>% filter(! is.na(trial.id))
 
-# Long form data probably more useful for per thermcouple summaries.
+# Long form data easier for making per thermcouple summaries below.
 thermocouples.long <- thermocouples.wide %>% gather(location, temperature, -time, -trial.id)
 
 ## then do the summary
 threshold=100 # temperature threshold in degrees C
+
 temps.sum <- thermocouples.long %>% group_by(trial.id, location) %>%
     summarise(dur = sum(temperature > threshold),
               degsec = sum(temperature[temperature > threshold]),
               peak.temp = max(temperature, na.rm=TRUE),
               peak.time = time[which(peak.temp == temperature)[1]],
-              num.NA = sum(is.na(temperature))) %>%
-    full_join(trials)
+              num.NA = sum(is.na(temperature)))
+
+# ok, dcast in reshape2 was nicer about m,ultiple value columns than is
+# spread(). So since we just have two locations, I'll do this manually:
+
+temps.sum.base <- filter(temps.sum, location=="base") %>% select(-location)
+temps.sum.canopy <- filter(temps.sum, location=="canopy") %>% select(-location)
+temps.sum <- left_join(temps.sum.base, temps.sum.canopy, by = "trial.id", suffix = c("_base", "_canopy"))
 
 #clean up env
 rm("concat_hobo_files", "get_trial_id", "read_hobo_file", "threshold",
    "thermocouples.wide", "thermocouples.long", "height10", "height20",
-   "height40", "basea", "baseb")
+   "height40", "basea", "baseb", "temps.sum.base", "temps.sum.canopy")
 
 # exports temps.sum to workspace
 
