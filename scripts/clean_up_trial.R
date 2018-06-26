@@ -20,11 +20,9 @@ trials <- trials %>% mutate(temp = (temp-32)*5/9) %>%
   mutate(start.time = mdy_hm(str_c(trial.date, " ",
                                    start.t),tz=TZ)) %>%
   mutate(end.time = mdy_hm(str_c(trial.date, " ", end.t), tz=TZ),
-         trial.id = paste(trial.date, trial.num, sep="_")) #delete code specifying 
-                                                           #timezone, use default
+         trial.id = paste(trial.date, trial.num, sep="_")) 
 
-
-#drop duplicated trial, always the first one failed
+#drop duplicated trial
 #find the duplicated trial id
 n1 <- trials$trial.date[duplicated(trials$label)]
 n2 <- trials$trial.num[duplicated(trials$label)] -1 #the one needs to be droped is 
@@ -62,7 +60,7 @@ get_average_ignition <- function(ignition){
 }
 
 trials$ignition <- get_average_ignition(trials$ignition)
-trials$logtmass <- log10(trials$total.mass)
+#trials$logtmass <- log10(trials$total.mass)
 trials <- trials %>% mutate(mconsum = total.mass-fuel.residual) %>%
   mutate(massloss = mconsum/total.mass)
 #clean up env
