@@ -41,9 +41,10 @@ height40 <- concat_hobo_files(list.files("../data/hobo",
 # Now merge all of these together to get one continuous time series (wide
 # data). Do we even need this? Really only necessary if we ever compare temps
 # across thermocouples.
-thermocouples.wide <- basea %>% full_join(baseb) %>% 
-                      full_join(height10) %>% 
-                      full_join(height20) %>% full_join(height40) 
+thermocouples.wide <- basea %>% full_join(baseb, by="time") %>% 
+                      full_join(height10, by="time") %>% 
+                      full_join(height20, by="time") %>% 
+  full_join(height40, by="time") 
 
 #take average temp for base, then get ave for below and above 10cm
 thermocouples.wide$base <- rowMeans(subset(thermocouples.wide, select= c(base.A, base.B)),
@@ -57,10 +58,9 @@ thermocouples.wide$above.sec <- rowMeans(subset(thermocouples.wide, select=c(hei
 thermocouples.wide <- thermocouples.wide %>% mutate_at(c("base", 
                                                          "above.sec"),funs(round(.,2)))
                                                          
-thermocouples.sec <- thermocouples.wide[, -c(2:6)]
-thermocouples.wide <- thermocouples.wide[, -c(2:6)]#get rid off base.A, base.B
-                      
-
+thermocouples.wide <- select(thermocouples.wide, -c(base.A, base.B,
+                                                   height.10, height.20,
+                                                   height.40))
 ## get a trial ID from a time point
 get_trial_id <- function(time) {
     matches <- time %within% trials$interval
@@ -71,18 +71,12 @@ get_trial_id <- function(time) {
 
 # assign trial ids
 thermocouples.wide$trial.id <- unlist(sapply(thermocouples.wide$time, get_trial_id))
-thermocouples.sec$trial.id <- unlist(sapply(thermocouples.sec$time, get_trial_id))
-#bi21 is dropped off at this step, and I don't know why
-
 
 # throw away data outside of a trial
 thermocouples.wide <- thermocouples.wide %>% filter(! is.na(trial.id))
-thermocouples.sec <- thermocouples.sec %>% filter(!is.na(trial.id))
-
 
 # Long form data porbably more useful for per thermcouple summaries.
 thermocouples.long <- thermocouples.wide %>% gather(location, temperature, -time, -trial.id)
-thermocouples.sec.long <- thermocouples.sec %>% gather(location, temperature, -time, -trial.id)
 
 ## then do the summary
 threshold=100 # temperature threshold in degrees C
@@ -92,15 +86,15 @@ temps.sum <- thermocouples.long %>% group_by(trial.id, location) %>%
               peak.temp = max(temperature, na.rm=TRUE),
               peak.time = time[which(peak.temp == temperature)[1]],
               num.NA = sum(is.na(temperature))) %>%
-    full_join(trials)
+    full_join(trials, by="trial.id")
 
-tempsec.sum <- thermocouples.sec.long %>% group_by(trial.id, location) %>%
+tempsec.sum <- thermocouples.long %>% group_by(trial.id, location) %>%
   summarise(dur = sum(temperature > threshold),
             degsec = sum(temperature[temperature > threshold]),
             peak.temp = max(temperature, na.rm=TRUE),
             peak.time = time[which(peak.temp == temperature)[1]],
             num.NA = sum(is.na(temperature))) %>%
-  full_join(trials) 
+  full_join(trials, by="trial.id") 
 #clean up env
 rm("concat_hobo_files", "get_trial_id", "read_hobo_file", "threshold",
    "thermocouples.wide", "thermocouples.sec", "thermocouples.long",
