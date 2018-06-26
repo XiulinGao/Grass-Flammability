@@ -36,9 +36,11 @@ concat_csv_dir <- function(path) {
 
 balance_data <- concat_csv_dir('../data/balance') %>% 
   filter(!label=='ap01') #throw away ARPU9
-
-balance_data <- left_join(balance_data, trials) 
-#test <- balance_data %>% mutate(percent.loss = mass/balance.initial)
+#create uniq utrial to join trials
+balance_data <- balance_data %>% mutate(utrial = paste(label, trial, sep='-'))
+balance_data <- left_join(balance_data, trials, by = c("utrial", "label"))
+# drop trial.num column, because it is same as trial
+balance_data <- select(balance_data, -trial.num)
 
 balance_data <- balance_data %>%
   mutate(mass = mass * 0.001) %>% # mass to g
@@ -48,7 +50,6 @@ balance_data <- balance_data %>%
     is.smoldering = nsec > 50+ignition+combustion & nsec < 50+ignition+combustion+smoldering,
     septime = 50+ignition+combustion)
          
-
 
 # graph biomass loss based on time in seconds
 ID <- unique(balance_data$utrial)
