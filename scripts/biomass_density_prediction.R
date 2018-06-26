@@ -13,13 +13,14 @@ raw.ca <- read.csv('../data/2016-canopy-fmc.csv', stringsAsFactors=FALSE,
 canopy <- raw.ca %>% filter(!sp.cd=="ARPU9") #throw away ARPU9, 
                                              #which contained just one rep.
 
-#un-burned 
+#un-burned plants
 ucanopy <- filter(canopy, treatment == 'u') %>%
   mutate(h.above10 = height-10) %>% mutate(total.mass=drym.10+dry.m)
  
-#burned    
+#burned plants  
 bcanopy <- filter(canopy, treatment == 'b') %>%
-  mutate(h.above10=height-10) %>% left_join(trials)
+  mutate(h.above10=height-10) %>% left_join(trials, by=c("label", "pair",
+                                                         "treatment", "sp.cd"))
 
 bcanopy <- bcanopy %>% select(label, pair, treatment, sp.cd, field.f, field.d, burn.f,
                               burn.d, tiller.num, height, height.90, drym.10, wda10.1,
@@ -41,7 +42,7 @@ summary(mass10LM) # adjusted R squared: 0.94
 #>10cm
 massLM <- lm(dry.m ~ sp.cd*total.mass + tiller.num, data=ucanopy)
 summary(massLM) # adjusted R squared: 0.98
-## so predict biomass for above 10cm section because model works better
+## so predict biomass for above 10cm section because model works bit better
 ## based on adjusted R squared 
 
 predictmass <- bcanopy %>% mutate (mass = predict(massLM, newdata = bcanopy))
