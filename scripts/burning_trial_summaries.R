@@ -1,5 +1,5 @@
-# burning_trial_summaries.R
-#
+# split balance data into single trial and fit negative exponential model 
+# to extract the coefficient as max. biomass loss rate
 
 library(broom)
 library(lme4)
@@ -8,19 +8,19 @@ library(dplyr)
 
 source("./read_balance_data.R")
 
-
 # first, some very basic summary values per trial
 balance_sum <- balance_data %>% group_by(label, trial, utrial, sp.cd) %>%
   summarize(balance.initial = mean(mass[nsec<40]),
             balance.final = mean(mass[nsec > (max(nsec) - 10)]),
             balance.burned = balance.initial - balance.final) %>%
-            left_join(trials) %>% select(-interval)
+            left_join(trials, by=c("label", "utrial", "sp.cd")) %>% 
+            select(-interval)
 
 # plot to see how calculated biomass loss match to measured biomass loss during 
 # each burning trial
-massmatch <- balance_sum %>% select(label, trial, utrial, balance.burned, mconsum)
-ggplot(massmatch, aes(mconsum, balance.burned)) + geom_point() + geom_abline(slope=1, intercept=0)+
-  labs(x="measured mass loss", y="calcualted mass loss")
+#massmatch <- balance_sum %>% select(label, trial, utrial, balance.burned, mconsum)
+#ggplot(massmatch, aes(mconsum, balance.burned)) + geom_point() + geom_abline(slope=1, intercept=0)+
+  #labs(x="measured mass loss", y="calcualted mass loss")
 
 # plot to see if balance burned mass deviates from record burned mass significantly
 ## ggplot(balance_sum, aes(balance.burned, initial.mass - final.mass - fuel.residual, color=sp.cd)) +
@@ -86,11 +86,11 @@ colnames(flamlossr)[5] <- "lossrate"
 flamlossr <- flamlossr %>% mutate(lossrate=abs(lossrate))
 ##compare AIC for linear and non-linear mods
 laics <- sapply(flamingMods$flamingMod, AIC)
-plot(nlaics ~ laics)
+plot(nlaics~laics)
 
 #clean up env
 
-rm("massmatch", "subdecay", "mod_coef", "decayID", "i")
+rm("subdecay", "mod_coef", "decayID", "i")
 
 ## plot fitted value from both linear and non-linear fit to see how they 
 ## match the original data
