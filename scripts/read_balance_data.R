@@ -36,12 +36,8 @@ concat_csv_dir <- function(path) {
 
 balance_data <- concat_csv_dir('../data/balance') %>% 
   filter(!label=='ap01') #throw away ARPU9
-#create uniq utrial to join trials
-balance_data <- balance_data %>% mutate(utrial = paste(label, trial, sep='-'))
-balance_data <- left_join(balance_data, trials, by = c("utrial", "label"))
-# drop trial.num column, because it is same as trial
-balance_data <- select(balance_data, -trial.num)
 
+balance_data <- left_join(balance_data, trials, by = "label")
 balance_data <- balance_data %>%
   mutate(mass = mass * 0.001) %>% # mass to g
   group_by(label) %>% 
