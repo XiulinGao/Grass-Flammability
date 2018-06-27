@@ -86,12 +86,30 @@ tempsec.sum <- thermocouples.long %>% group_by(trial.id, location) %>%
             degsec = sum(temperature[temperature > threshold]),
             peak.temp = max(temperature, na.rm=TRUE),
             peak.time = time[which(peak.temp == temperature)[1]],
-            num.NA = sum(is.na(temperature))) %>%
-  full_join(trials, by="trial.id") 
+            num.NA = sum(is.na(temperature)))
+
+# split temp summary into two datasets which contain temp summary for soil
+# base and above soil surface location separately, and rename column with
+# location label, this long data format is useful for later analysis when 
+# there is need to combine all measurements into one dataset
+
+tempsum.base <- tempsec.sum %>% filter(location=="base")
+
+tempsum.base <- tempsum.base %>% select(trial.id, dur, degsec, peak.temp, 
+                                        peak.time, num.NA) %>% 
+  rename(trial.id=trial.id,dur.base = dur, degsec.base=degsec, peaktemp.base=peak.temp,
+                peaktime.base=peak.time, numNA.base=num.NA)
+
+tempsum.above <- tempsec.sum %>% filter(location=="above.sec")
+tempsum.above <- tempsum.above %>% select(trial.id, dur, degsec, peak.temp, 
+                                        peak.time, num.NA) %>% 
+  rename(trial.id=trial.id,dur.above = dur, degsec.above=degsec, 
+  peaktemp.above=peak.temp,peaktime.above=peak.time, numNA.above=num.NA)
+
 #clean up env
 rm("concat_hobo_files", "get_trial_id", "read_hobo_file", "threshold",
-   "thermocouples.wide", "thermocouples.sec", "thermocouples.long",
-   "thermocouples.sec.long", "height10", "height20", "height40", 
+   "thermocouples.wide", "thermocouples.long",
+   "height10", "height20", "height40", 
    "basea", "baseb")
   
   
