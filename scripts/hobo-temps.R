@@ -5,8 +5,6 @@ library(lubridate)
 library(stringr)
 library(tidyr)
 
-source("./clean_up_trial.R") #grab basic trial summary data
-
 read_hobo_file <- function(filename) {
     hobo <- read.csv(filename, skip=2, header=FALSE)
     names(hobo)[1:3] <- c("row", "time", "temp")
