@@ -3,13 +3,9 @@
 ### biomass ratio) influence grass flammability after account for total biomass
 ### effect
 
-#library(lme4)
-#library(AICcmodavg)
+library(dplyr)
 library(afex)
-#library(MuMIn)
 library(pcaMethods)
-#library(xtable)
-#library(MASS)
 
 # Look for additional grass trait that may influence flammability besides total biomass.
 # Steps are as follows:
@@ -23,28 +19,48 @@ library(pcaMethods)
 # 5. look at sigificance of fixed effect with afex::mixed
 
 ## data loading and plot theme set up
-
-source("./final_summary_dataset.R")
+source("./hobo-temps.R") #temp summaries for each trial
+source("./burning_trial_summaries.R") #mass loss rate for each trial
+source("./biomass_density_prediction.R")# architecture data
 source("./ggplot-theme.R") 
-
 color <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
            "#0072B2", "#D55E00", "#CC79A7")
+
+#throw away intervals from trials, since it 
+#does not work when join trials with other dataset(can't view file),
+#it is not necessary to keep it anyway 
+
+trials <- select(trials, -interval)
+trials <- trials[order(trials$label), ]
+
+#1. data frame has all measurements for each observation, observation is in 
+# row, each column is a measurement type
+
+alldata <- left_join(trials, mass.density, by=c("label",
+           "pair", "treatment", "sp.cd", "sp.name")) %>% 
+  left_join(tempsum.base, by="trial.id") %>% 
+  left_join(tempsum.above, by="trial.id") %>%
+  left_join(flamlossr, by=c("label", "sp.cd", "sp.name"))
 
 ############### dimension of grass flammability ################
 ## apply principal component analysis to selected flammability measurement 
 ## for further analysis
 
-flamabove.PCA <- pcadata.above %>%
-  select (dur, lossrate, massloss, degsec) %>% 
+flamabove.PCA <- alldata %>%
+  select (dur.above, lossrate, massloss, degsec.above) %>% 
   pca(nPcs=4, method="ppca",seed=100, center=TRUE,scale="uv")
+
 summary(flamabove.PCA) 
 loadings(flamabove.PCA)
+
 ## total heat release and rate of heat release are independent axes
 
 biplot(flamabove.PCA, choices = c("PC1","PC2"))
 
-flambase.PCA <- pcadata.base %>% select(dur, lossrate, massloss, degsec) %>% 
-  pca(nPcs=4, method="ppca", center=TRUE, scale="uv")   
+flambase.PCA <- alldata %>% 
+  select(dur.base, lossrate, massloss, degsec.base) %>% 
+  pca(nPcs=4, method="ppca", center=TRUE, scale="uv")  
+
 summary(flambase.PCA)
 loadings(flambase.PCA)
 biplot(flambase.PCA)
@@ -58,13 +74,13 @@ biplot(flambase.PCA)
 ## only include relative humidity.
 
 ##### graphical exploration #####
-ggplot(temp.above, aes(total.mass, degsec, color=sp.name)) + geom_point() +
-  geom_smooth(method="lm", se=FALSE, aes(color = sp.name)) +
+ggplot(filter(alldata, !is.na(degsec.above)), 
+       aes(total.mass, degsec.above, color=sp.name)) + geom_point() +
   bestfit + scale_color_manual(values=color) 
 ## positive linear relationship, same pattern within and across species
 
 # take biomass effect out
-degseca.lmod <- lm(degsec ~ total.mass, data=temp.above)
+degseca.lmod <- lm(degsec.above ~ total.mass, data=alldata)
 # plot(degseca.lmod) # observation 82 has a cook's D >0.5, which
 # is due to the extreme value of biomass in ERCU2
 # analysis is performed with and without this extremme case
@@ -72,14 +88,17 @@ degseca.lmod <- lm(degsec ~ total.mass, data=temp.above)
 
 summary(degseca.lmod) #sig. biomass effect
 # take residuals
+temp.above <- filter(alldata, !is.na(degsec.above))
 temp.above$crt.degseca <- residuals(degseca.lmod)
-#ggplot(temp.above, aes(total.mass, adj_dura)) + geom_point()
+
 ##### graphical exploration to see trait and weather effect #####
 
 ggplot(temp.above, aes(mratio, crt.degseca, color=sp.name)) + geom_point() + 
-  bestfit + scale_color_manual(values=color) 
+ geom_smooth(method="lm", se=FALSE, aes(color=sp.name)) +
+   bestfit + scale_color_manual(values=color) 
 # negative?  
 ggplot(temp.above, aes(tdensity, crt.degseca, color=sp.name)) + geom_point() +
+  geom_smooth(method="lm", se=FALSE, aes(color=sp.name)) +
   bestfit + scale_color_manual(values=color)
 # positive?
 ggplot(temp.above, aes(humidity, crt.degseca, color=sp.name)) + geom_point() + 
@@ -127,17 +146,18 @@ summary(crtdegseca.mod.final)
 ##### integrated temp (>100) <10cm ~ total biomass, biomass ratio and density ##### 
 ######### graphical exploration #########
 
-ggplot(temp.base, aes(total.mass, degsec)) + geom_point() +
- geom_smooth(method="lm", se=FALSE, aes(color=sp.name)) + 
+ggplot(filter(alldata, !is.na(degsec.base)), aes(total.mass, degsec.base, 
+     color=sp.name)) + geom_point() + 
   bestfit + scale_color_manual(values=color)
 ## positive linear relationship 
 
 ## build linear model and take residuals
-degsecb.lmod <- lm(degsec ~ total.mass, data= temp.base)
+degsecb.lmod <- lm(degsec.base ~ total.mass, data= alldata)
 ## result kept same with or without observation 82 (influential point)
 
 summary(degsecb.lmod) #sig. biomass effec
 
+temp.base <- filter(alldata, !is.na(degsec.base))
 temp.base$crt.degsecb <- residuals(degsecb.lmod)
 
 ##### graphical exploration ######
@@ -188,12 +208,14 @@ summary(crtdegsecb.mod.final)
 
 ##### maximum loss rate ~ total biomass, biomass density and ratio ######
 
-ggplot(data=flam.loss, aes(total.mass, lossrate, color=sp.name)) + 
-  geom_point() + geom_smooth(method="lm", se=FALSE, aes(color=sp.name)) +
+ggplot(filter(alldata, !is.na(lossrate)), 
+  aes(total.mass, lossrate, color=sp.name)) + 
+  geom_point() + 
   bestfit + scale_color_manual(values=color)
 
-lossr.lmod <- lm(lossrate ~ total.mass, data=flam.loss)
+lossr.lmod <- lm(lossrate ~ total.mass, data=alldata)
 summary(lossr.lmod) 
+flam.loss <- filter(alldata, !is.na(lossrate))
 flam.loss$crt.lossr <- residuals(lossr.lmod)
 ##
 ######## graphical explore effect of density, ratio and weather ##########
