@@ -80,13 +80,6 @@ thermocouples.long <- thermocouples.wide %>% gather(location, temperature, -time
 
 ## then do the summary
 threshold=100 # temperature threshold in degrees C
-temps.sum <- thermocouples.long %>% group_by(trial.id, location) %>%
-    summarise(dur = sum(temperature > threshold),
-              degsec = sum(temperature[temperature > threshold]),
-              peak.temp = max(temperature, na.rm=TRUE),
-              peak.time = time[which(peak.temp == temperature)[1]],
-              num.NA = sum(is.na(temperature))) %>%
-    full_join(trials, by="trial.id")
 
 tempsec.sum <- thermocouples.long %>% group_by(trial.id, location) %>%
   summarise(dur = sum(temperature > threshold),
