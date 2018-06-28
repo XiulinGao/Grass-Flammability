@@ -97,7 +97,7 @@ flamabove.loads <- transform(flamabove.loads,
             size = 2, vjust=0.5, hjust="inward", color="black") +
   pubtheme.nogridlines + theme(legend.position = "none")
   
-ggsave("../results/Fig2_flam_biplot.pdf", width = col1, height = 0.9*col1, units="cm")
+ggsave("../results/Fig2_flam_biplot.pdf", width = col1, height = 0.95*col1, units="cm")
                               
 ###### effect of biomass on temperature integration #######
 
@@ -133,7 +133,7 @@ ggplot(aes(total.mass, degsec)) + geom_point(size=ptsize, shape=16) +
   xlab("Total above ground biomass (g)") + 
    pubtheme.nogridlines
 
-ggsave("../results/Fig3_duration_biomass.pdf", width = col1, height = 0.9*col1, units="cm")
+ggsave("../results/Fig3_duration_biomass.pdf", width = col1, height = 0.95*col1, units="cm")
 
 ###### effect of biomass height ratio on temp integration at soil surface ######
 
@@ -169,7 +169,9 @@ ggplot(temp.base, aes(mratio, crt.degsecb, color=sp.name)) +
                                legend.position = "bottom",
                                legend.title = element_blank())
 
-ggsave("../results/Fig4_temp_mratio.pdf", width = col1, height= 0.9*col1, 
+ggsave("../results/Fig4_temp_mratio.pdf", width = col1, height= 0.95*col1, 
+       units="cm")
+ggsave("../results/Fig4_temp_mratio.jpg", width = col1, height = 0.95*col1,
        units="cm")
 
 ##### total biomass effect on max. mass loss rate ######
@@ -178,7 +180,7 @@ ggplot(flam.loss, aes(total.mass, lossrate)) + geom_point(size=ptsize, shape=16)
   ylab(expression("Maximum mass loss rate" ~ (s^{-1}))) +
   xlab("Total above ground biomass (g)") + pubtheme.nogridlines
 
-ggsave("../results/Fig5_lossrate_biomass.pdf", width = col1, height= 0.9*col1, 
+ggsave("../results/Fig5_lossrate_biomass.pdf", width = col1, height= 0.95*col1, 
        units="cm")
 
 
