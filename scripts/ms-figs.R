@@ -26,16 +26,16 @@ lnsize=0.8
 #results kept same if PCA is done with temp measurements
 #at soil surface
 
-flambase.PCA <- alldata %>%
-  select ( dur.base, lossrate, massloss, degsec.base) %>% 
+flamabove.PCA <- alldata %>%
+  select ( dur.above, lossrate, massloss, degsec.above) %>% 
   pca(nPcs = 4, method="ppca", seed = 100, center=TRUE,scale="uv")
 # warning message due to the number of PCs, need to check
-biplot(flambase.PCA)
-summary(flambase.PCA)
+biplot(flamabove.PCA)
+summary(flamabove.PCA)
 
 #extract pca loading and score for biplot
-flambase.loads <- as.data.frame(loadings(flambase.PCA))
-flambase.scores <- as.data.frame(scores(flambase.PCA))
+flamabove.loads <- as.data.frame(loadings(flamabove.PCA))
+flamabove.scores <- as.data.frame(scores(flamabove.PCA))
 
 #variable names for loading 
 varnames <- c("Duration above 100", "Mass loss rate", "Mass loss", 
@@ -53,7 +53,7 @@ get_ratio <- function(pcscores, pcloads) {
     (max(pcscores$PC2) - min(pcscores$PC2)/(max(pcloads$PC2)-min(pcloads$PC2))),
     (max(pcscores$PC1) - min(pcscores$PC1)/(max(pcloads$PC1)-min(pcloads$PC1)))
   )
- # get the ratio for PC1-PC3 biplot
+ # get the ratio for PC1-PC3 biplot if needed
   mult2 <- min(
     (max(pcscores$PC3) - min(pcscores$PC3)/(max(pcloads$PC3)-min(pcloads$PC3))),
     (max(pcscores$PC1) - min(pcscores$PC1)/(max(pcloads$PC1)-min(pcloads$PC1)))
@@ -61,16 +61,16 @@ get_ratio <- function(pcscores, pcloads) {
 return(c(mult1, mult2))
 }
 
-mult <- get_ratio(flambase.scores,flambase.loads)
+mult <- get_ratio(flamabove.scores,flamabove.loads)
 
 ## produce new loading coordinates by the score/loading ratio 
 ## to propotionally extend loading segments on biplot
 
-flambase.loads <- transform(flambase.loads,
-                             v12 = 0.7 * mult[1] * PC1,
-                             v2 = 0.7 * mult[1] * PC2,
-                             v13 = 0.7 * mult[2] * PC1,
-                             v3 = 0.7 * mult[2] * PC3
+flamabove.loads <- transform(flamabove.loads,
+                             v12 = 0.8 * mult[1] * PC1,
+                             v2 = 0.8 * mult[1] * PC2,
+                             v13 = 0.8 * mult[2] * PC1,
+                             v3 = 0.8 * mult[2] * PC3
 )
 ## get_ratio was used to produce biplot for PC1-PC2 and 
 ## PC1-PC3, now only need for PC1-PC2
@@ -79,7 +79,8 @@ flambase.loads <- transform(flambase.loads,
 
 ## adjust text coordinate for each variable name to avoid overlap of
 ## text
-  text.cor <- flambase.loads %>% select(v12, v2, v13, v3)
+  text.cor <- flamabove.loads %>% select(v12, v2)
+  
     text.cor$v12[1] <- text.cor$v12[1] + 0.15
     text.cor$v12[2] <- text.cor$v12[2] - 0.15 
     text.cor$v12[3] <- text.cor$v12[3] + 0.15
@@ -87,10 +88,10 @@ flambase.loads <- transform(flambase.loads,
   
 
   ggplot()+
-  geom_blank(data = flambase.scores, aes(x=PC1, y=PC2)) +
+  geom_blank(data = flamabove.scores, aes(x=PC1, y=PC2)) +
     #xlim(c(-3.0, 2)) + ylim(c(0, 4.5)) +
   ylab("Principal component 2") +  xlab("Principal component 1") +
-  geom_point(data = flambase.loads, aes(x=v12, y=v2), shape=15,
+  geom_point(data = flamabove.loads, aes(x=v12, y=v2), shape=15,
              size=ptsize, color = "black")+
   geom_text(data = text.cor, aes(x=v12, y=v2, label=varnames),
             size = 2, vjust=0.5, hjust="inward", color="black") +
@@ -263,5 +264,6 @@ print(xtable(summary(crtdegsecb.mod.final)$coefficients), type="html",
 #5.final model of traits effect on maximum biomass loss rate
 print(xtable(anova(crtlossr.mod.final), digits = c(0,0,3,3,3)), type="html",
       file="../results/anova-tab-lossr-final-mod.html")
+
 print(xtable(summary(crtlossr.mod.final)$coefficients, digits = c(0,3,3,3)), 
       type="html",file="../results/coef-tab-lossr-final-mod.html")
