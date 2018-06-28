@@ -180,25 +180,25 @@ resca_degsecb <- temp.base %>% mutate_at(c("tdensity", "mratio", "humidity"),
 
 crtdegsecb.mod <- mixed(crt.degsecb ~ mratio_s*tdensity_s +
                               humidity_s + (1|sp.name), 
-                       data=resca_degsecb, REML = FALSE) 
+                       data=resca_degsecb,  method = "KR", REML = FALSE) 
 
 crtdegsecb.mod.rsi <- mixed(crt.degsecb ~ mratio_s*tdensity_s +
                              humidity_s + (1 + tdensity_s | sp.name),
-                           data = resca_degsecb, REML = FALSE)
+                           data = resca_degsecb,  method = "KR", REML = FALSE)
 # model failed to coverge, bad fit
 
 crtdegsecb.mod.rsi2 <- mixed(crt.degsecb ~ mratio_s*tdensity_s +
                               humidity_s + (1 + mratio_s | sp.name),
-                            data = resca_degsecb, REML = FALSE)
+                            data = resca_degsecb, method = "KR", REML = FALSE)
 # model failed to converge
 crtdegsecb.mod.rsi3 <- mixed(crt.degsecb ~ mratio_s*tdensity_s +
                               humidity_s + (1 + humidity_s | sp.name),
-                            data = resca_degsecb, REML = FALSE)
+                            data = resca_degsecb, method = "KR", REML = FALSE)
 # model failed to converge, so decide not to include any slope
 
 crtdegsecb.mod.final <- mixed(crt.degsecb ~ tdensity_s*mratio_s + 
                                 humidity_s + (1 | sp.name), 
-                              data = resca_degsecb, REML=FALSE)
+                              data = resca_degsecb,  method = "KR",REML=FALSE)
 anova(crtdegsecb.mod.final)
 summary(crtdegsecb.mod.final)
 
@@ -239,24 +239,24 @@ resca_lossr <- flam.loss %>% mutate_at(c("tdensity", "mratio", "humidity"),
                                       funs(s = zscore(.)))
 
 crtlossr.mod <- mixed(crt.lossr ~ mratio_s*tdensity_s + humidity_s +
-                        (1 | sp.name), data = resca_lossr, REML = FALSE)
+                        (1 | sp.name), data = resca_lossr,  method = "KR", REML = FALSE)
 crtlossr.mod.rsi <- mixed(crt.lossr ~ mratio_s*tdensity_s + humidity_s +
                             (1 + tdensity_s | sp.name), 
-                          data = resca_lossr, REML = FALSE)
+                          data = resca_lossr,  method = "KR", REML = FALSE)
 anova(crtlossr.mod, crtlossr.mod.rsi) # no slope
 
 crtlossr.mod.rsi2 <- mixed(crt.lossr ~ mratio_s*tdensity_s + humidity_s +
                             (1 + mratio_s | sp.name), 
-                          data = resca_lossr, REML = FALSE)
+                          data = resca_lossr,  method = "KR", REML = FALSE)
 anova(crtlossr.mod, crtlossr.mod.rsi2) # no slope
 crtlossr.mod.rsi3 <- mixed(crt.lossr ~ mratio_s*tdensity_s + humidity_s +
                                                  (1 + humidity_s | sp.name), 
-                           data = resca_lossr, REML = FALSE)
+                           data = resca_lossr,  method = "KR", REML = FALSE)
 anova(crtlossr.mod, crtlossr.mod.rsi3) # no slope
 
 crtlossr.mod.final <- mixed(crt.lossr ~ mratio_s*tdensity_s +
                            + humidity_s + (1|sp.name),
-                         data=resca_lossr, REML=FALSE)
+                         data=resca_lossr,  method = "KR", REML=FALSE)
 anova(crtlossr.mod.final)
 summary(crtlossr.mod.final)
 ## note: max biomass loss rate is only negetaively influenced by 
