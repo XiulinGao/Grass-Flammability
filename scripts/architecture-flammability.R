@@ -19,11 +19,11 @@ library(pcaMethods)
 # 5. look at sigificance of fixed effect with afex::mixed
 
 ## data loading and plot theme set up
-source("./hobo-temps.R") #temp summaries for each trial
 source("./burning_trial_summaries.R") #mass loss rate for each trial
+source("./hobo-temps.R") #temp summaries for each trial
 source("./biomass_density_prediction.R")# architecture data
 source("./ggplot-theme.R") 
-color <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
+colpalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
            "#0072B2", "#D55E00", "#CC79A7")
 
 #throw away intervals from trials, since it 
@@ -76,7 +76,7 @@ biplot(flambase.PCA)
 ##### graphical exploration #####
 ggplot(filter(alldata, !is.na(degsec.above)), 
        aes(total.mass, degsec.above, color=sp.name)) + geom_point() +
-  bestfit + scale_color_manual(values=color) 
+  bestfit + scale_color_manual(values=colpalette) 
 ## positive linear relationship, same pattern within and across species
 
 # take biomass effect out
@@ -95,14 +95,14 @@ temp.above$crt.degseca <- residuals(degseca.lmod)
 
 ggplot(temp.above, aes(mratio, crt.degseca, color=sp.name)) + geom_point() + 
  geom_smooth(method="lm", se=FALSE, aes(color=sp.name)) +
-   bestfit + scale_color_manual(values=color) 
+   bestfit + scale_color_manual(values=colpalette) 
 # negative?  
 ggplot(temp.above, aes(tdensity, crt.degseca, color=sp.name)) + geom_point() +
   geom_smooth(method="lm", se=FALSE, aes(color=sp.name)) +
-  bestfit + scale_color_manual(values=color)
+  bestfit + scale_color_manual(values=colpalette)
 # positive?
 ggplot(temp.above, aes(humidity, crt.degseca, color=sp.name)) + geom_point() + 
-  bestfit + scale_color_manual(values=color) 
+  bestfit + scale_color_manual(values=colpalette) 
 # weak positive?!
 
 # rescale numeric variables 
@@ -148,7 +148,7 @@ summary(crtdegseca.mod.final)
 
 ggplot(filter(alldata, !is.na(degsec.base)), aes(total.mass, degsec.base, 
      color=sp.name)) + geom_point() + 
-  bestfit + scale_color_manual(values=color)
+  bestfit + scale_color_manual(values=colpalette)
 ## positive linear relationship 
 
 ## build linear model and take residuals
@@ -163,15 +163,15 @@ temp.base$crt.degsecb <- residuals(degsecb.lmod)
 ##### graphical exploration ######
 ggplot(temp.base, aes(tdensity, crt.degsecb, color=sp.name)) + geom_point()+
   geom_smooth(method="lm", se=FALSE, aes(color=sp.name)) + 
-  bestfit + scale_color_manual(values=color)
+  bestfit + scale_color_manual(values=colpalette)
 ## positive response across species but varying within species response? 
 
 ggplot (temp.base, aes(mratio, crt.degsecb, color=sp.name)) + geom_point()+
   geom_smooth(method = "lm", se=FALSE, aes(color=sp.name)) +
-  bestfit + scale_color_manual(values=color) 
+  bestfit + scale_color_manual(values=colpalette) 
 ## negative response across species but varying within species response?
 ggplot (temp.base, aes(humidity, crt.degsecb, color=sp.name)) + geom_point()+
-  bestfit + scale_color_manual(values=color) 
+  bestfit + scale_color_manual(values=colpalette) 
 ## positive?!
 
 ## rescale numeric variables
@@ -211,7 +211,7 @@ summary(crtdegsecb.mod.final)
 ggplot(filter(alldata, !is.na(lossrate)), 
   aes(total.mass, lossrate, color=sp.name)) + 
   geom_point() + 
-  bestfit + scale_color_manual(values=color)
+  bestfit + scale_color_manual(values=colpalette)
 
 lossr.lmod <- lm(lossrate ~ total.mass, data=alldata)
 summary(lossr.lmod) 
@@ -221,17 +221,17 @@ flam.loss$crt.lossr <- residuals(lossr.lmod)
 ######## graphical explore effect of density, ratio and weather ##########
 ggplot (data=flam.loss, aes(tdensity, crt.lossr, color=sp.name)) + 
   geom_point()+ geom_smooth(method="lm", se=FALSE, aes(color=sp.name))+
-  bestfit + scale_color_manual(values=color)
+  bestfit + scale_color_manual(values=colpalette)
 ## negative?
 
 ggplot (data=flam.loss, aes(mratio, crt.lossr, color=sp.name)) + 
   geom_point()+ geom_smooth(method="lm", se=FALSE, aes(color=sp.name))+
-  bestfit + scale_color_manual(values=color)
+  bestfit + scale_color_manual(values=colpalette)
 ## weak positive?
 
 ggplot (data=flam.loss, aes(humidity, crt.lossr, color=sp.name)) + 
   geom_point()+ geom_smooth(method="lm", se=FALSE, aes(color=sp.name))+
-  bestfit + scale_color_manual(values=color)
+  bestfit + scale_color_manual(values=colpalette)
 ## no ?
 
 #rescale variables
